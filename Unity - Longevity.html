@@ -1,0 +1,1651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Unity 2025 — Carry Finisher (Precomputed 20 Sessions, EN)</title>
+<style>
+  :root{color-scheme:dark}
+  *{box-sizing:border-box}
+  body{margin:0;background:#0b1220;color:#e6eaf2;font:16px/1.6 system-ui,Arial}
+  .app{max-width:980px;margin:0 auto;padding:16px 12px 84px}
+  h1{margin:0 0 .6rem;font-size:28px}
+  h2{margin:0;font-size:18px}
+  h3{margin:10px 0 6px;font-size:15px}
+  .btn{background:#2b63ff;border:0;color:#fff;padding:12px 14px;border-radius:12px;cursor:pointer;font-weight:800;transition:transform .06s ease}
+  .btn.ghost{background:#1a2a4a}
+  .btn.inline{padding:8px 10px;border-radius:10px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .row.stack>*.btn{flex:1}
+  .card{background:#101a30;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px;margin:10px 0}
+  .session{white-space:pre-wrap;background:#0e182c;border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:16px;line-height:1.7;font-family:ui-monospace,monospace;font-size:clamp(13px,1.9vw,16px)}
+  .pill{display:inline-block;background:#182446;border-radius:999px;padding:5px 12px;font-size:12px;margin:3px 3px 0 0}
+  details{border:1px solid rgba(255,255,255,.08);border-radius:12px}
+  summary{list-style:none;cursor:pointer;padding:12px;font-weight:800;background:#0f1a34;border-radius:12px}
+  summary::-webkit-details-marker{display:none}
+  details[open]>summary{border-bottom:1px solid rgba(255,255,255,.08);border-bottom-left-radius:0;border-bottom-right-radius:0}
+  .panel{padding:12px}
+  label{font-size:12px;opacity:.88;display:block;margin:8px 0 4px}
+  select,input[type="text"],input[type="number"]{width:100%;background:#0d1830;border:1px solid rgba(255,255,255,.18);color:#e6eaf2;padding:10px;border-radius:10px}
+  .grid{display:grid;gap:10px}
+  .cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  @media (max-width:760px){
+    .cols-2,.cols-4{grid-template-columns:1fr}
+    .row.stack{display:grid;grid-template-columns:1fr;gap:8px}
+    .btn{padding:14px 16px;border-radius:14px}
+  }
+  .muted{opacity:.75;font-size:12px}
+  .toast{position:fixed;right:12px;bottom:12px;background:#0f1a34;border:1px solid rgba(255,255,255,.15);padding:10px 12px;border-radius:12px;font-size:13px;display:none}
+  .badge{display:inline-block;font-weight:800;font-size:12px;padding:3px 8px;border-radius:10px;border:1px solid rgba(255,255,255,.25);margin-left:6px;background:#0f1a34}
+  .tabs{display:flex;gap:8px;margin:10px 0 6px;flex-wrap:wrap}
+  .tab-btn{
+    background:#0f1a34;
+    border:1px solid rgba(255,255,255,.15);
+    color:#e6eaf2;
+    padding:10px 12px;
+    border-radius:12px;
+    font-weight:800;
+    cursor:pointer;
+    position:relative;
+  }
+  .tab-btn.active{background:#2b63ff;border-color:#2b63ff}
+  .tab-pane{display:none}
+  .tab-pane.active{display:block}
+  .counter{display:inline-flex;align-items:center;gap:8px;margin-left:12px;flex:0 0 auto}
+  .counter .cbtn{background:#0f1a34;border:1px solid rgba(255,255,255,.2);color:#e6eaf2;border-radius:10px;padding:4px 10px;font-weight:800;cursor:pointer}
+  .counter .cval{min-width:64px;text-align:center;font-weight:900}
+  .session .line{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:nowrap}
+  .session .line .txt{flex:1;min-width:0;white-space:normal}
+  .row-inline{display:flex;gap:8px;align-items:center}
+  .row-inline input[type="text"]{flex:1}
+  .chk{display:inline-flex;gap:6px;align-items:center;font-size:12px;opacity:.9}
+  .barbell-box{padding:10px;border:1px dashed rgba(255,255,255,.25);border-radius:10px;background:#0f1a34}
+  ul{margin:6px 0 6px 18px;padding:0}
+  ul li{margin:2px 0;font-size:13px}
+
+  .row.stack {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .nav-dot{
+    position:absolute;
+    top:4px;
+    right:6px;
+    width:8px;
+    height:8px;
+    border-radius:999px;
+    background:#f97316;
+  }
+
+  .test-block{
+    margin:10px 0;
+    padding:10px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.08);
+    background:#0f172a;
+  }
+  .test-block h3{margin-top:2px}
+  .test-block .row{align-items:flex-end}
+
+  .rep-counter{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    padding:4px 8px;
+    border-radius:999px;
+    background:#0f1a34;
+  }
+  .rep-btn{
+    border:0;
+    border-radius:8px;
+    padding:2px 8px;
+    background:#111827;
+    color:#e5e7eb;
+    cursor:pointer;
+    font-weight:800;
+  }
+  .rep-value{
+    min-width:24px;
+    text-align:center;
+    font-weight:800;
+  }
+  .timer-row{
+    margin:8px 0;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .timer-controls{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+  }
+  #test-snatch100-timer-display{
+    font-variant-numeric:tabular-nums;
+    font-weight:800;
+    padding:4px 10px;
+    border-radius:999px;
+    background:#020617;
+    border:1px solid rgba(255,255,255,.2);
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>Unity 2025</h1>
+
+  <div class="tabs" role="tablist" aria-label="Navigation">
+    <button class="tab-btn active" data-tab="plan" aria-selected="true">Planner</button>
+    <button class="tab-btn" data-tab="custom" aria-selected="false">Custom Exercises</button>
+    <button class="tab-btn" data-tab="skill" aria-selected="false">
+      Skill Test
+      <span id="skillDot" class="nav-dot" hidden></span>
+    </button>
+  </div>
+
+  <div id="tab-plan" class="tab-pane active">
+    <div class="row stack" style="margin:8px 0 12px">
+      <button id="btnPrevTop" class="btn ghost" aria-label="Previous session">◀ Prev</button>
+      <button id="btnNextTop" class="btn" aria-label="Next session">Next ▶</button>
+      <button id="btnCompleteTop" class="btn inline" title="Mark this session as completed">Complete ✔</button>
+    </div>
+
+    <div class="card">
+      <h2>Current Session</h2>
+      <div id="session" class="session" aria-live="polite">No block yet. Use Settings to apply settings & create a new block.</div>
+    </div>
+
+    <details id="accSettings">
+      <summary>Settings</summary>
+      <div class="panel">
+        <div class="grid cols-2">
+          <div>
+            <label>Block volume (Unity)</label>
+            <select id="selVol">
+              <option>180</option><option>240</option><option selected>300</option><option>400</option><option>500</option>
+            </select>
+          </div>
+          <div>
+            <label>Seed (optional)</label>
+            <input id="inpSeed" placeholder="e.g. 12345">
+          </div>
+          <div>
+            <label>KB-bias (mains only; based on week split)</label>
+            <select id="selBias">
+              <option value="on" selected>On (▲/▼)</option>
+              <option value="off">Off</option>
+            </select>
+          </div>
+          <div>
+            <label>Strength Focus overlay (1 grind pattern)</label>
+            <select id="selPS">
+              <option value="">— Off —</option>
+              <option>Push</option><option>Pull</option><option>Squat</option><option>Hinge</option>
+            </select>
+          </div>
+          <div>
+            <label>Strength Focus Volume (if Strength Focus enabled)</label>
+            <select id="selPSVol" disabled>
+              <option>180</option><option selected>240</option><option>300</option>
+            </select>
+          </div>
+          <div>
+            <label>Strength Focus mode</label>
+            <label class="row" style="gap:10px">
+              <input type="checkbox" id="chkPSAdvanced" disabled>
+              <span>Advanced Strength Focus</span>
+            </label>
+          </div>
+          <div>
+            <label>Base kettlebell (kg)</label>
+            <input id="inpBaseKB" type="text" placeholder="e.g. 16">
+          </div>
+          <div>
+            <label class="row"><input type="checkbox" id="chkBarbellMode"> Barbell-mode (Heavy Bias = Barbell)</label>
+          </div>
+          <div>
+            <label class="row"><input type="checkbox" id="chkRunAuto" checked> Optional Run suggestions</label>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top:12px">
+          <div id="kpi"></div>
+          <div id="orders" class="muted" style="margin-top:6px"></div>
+          <div class="muted" style="margin-top:6px">
+            Week percentages: Deload 15% • Maintenance 22% • Development 28% • Stress 35%.<br>
+            Splits per partition: 3 → [15,35,50]% • 4 → [15,22,28,35]% • 5 → [10,15,20,25,30]%.<br>
+            Bias (mains only): min%=Heavy ▲, max%=Light ▼. Light-bias main: cap-boost to 10 per round (no PS).<br>
+            Barbell-mode: replaces Heavy-bias mains of Push/Pull/Squat/Hinge with your barbell variants.
+          </div>
+        </div>
+
+        <div class="row stack" style="margin-top:8px">
+          <button id="btnRebuild" class="btn">Apply settings &amp; create new block</button>
+          <button id="btnReset" class="btn ghost">Reset progress</button>
+          <button id="btnResetCounters" class="btn ghost" title="Clear set counters of this session">Reset counters</button>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <div id="tab-custom" class="tab-pane">
+    <div class="card">
+      <h2>Custom Exercises</h2>
+      <p class="muted">
+        This page assumes your <b>Base kettlebell</b> (in Settings) is your current Goldilocks bell.
+        As a simple rule of thumb for Unity:
+        <br>• All <b>technique tests</b> (swing, clean, press, front squat, snatch 5/side, get-up) are done with your <b>Heavy Bias</b> bell (Base&nbsp;+&nbsp;4&nbsp;kg).
+        <br>• The <b>Snatch Volume Test</b> (100 reps &lt; 5:00) is done with your <b>Light Bias</b> bell (Base&nbsp;−&nbsp;4&nbsp;kg).
+        <br>The bell fields below will auto-fill from your Base kettlebell if possible, but you can always override them.
+      </p>
+      <div id="customForm" class="grid cols-2" style="margin-top:8px"></div>
+      <div class="card barbell-box" style="margin-top:12px">
+        <b>Barbell-mapping (for Heavy Bias)</b>
+        <div class="grid cols-4" style="margin-top:8px">
+          <div><label>Push (e.g. Barbell Bench Press)</label><input type="text" id="barbellPush" placeholder="Barbell Bench Press"></div>
+          <div><label>Pull (e.g. Barbell Row)</label><input type="text" id="barbellPull" placeholder="Barbell Row"></div>
+          <div><label>Squat (e.g. Back Squat)</label><input type="text" id="barbellSquat" placeholder="Barbell Back Squat"></div>
+          <div><label>Hinge (e.g. Deadlift)</label><input type="text" id="barbellHinge" placeholder="Barbell Deadlift"></div>
+        </div>
+        <div class="row stack" style="margin-top:8px">
+          <button id="btnSaveBarbell" class="btn inline">Save Barbell lifts</button>
+        </div>
+        <p class="muted" style="margin-top:6px">When <b>Barbell-mode</b> is on and a pattern is Heavy-biased, the main is automatically replaced by your barbell lift.</p>
+      </div>
+      <div class="row stack" style="margin-top:8px">
+        <button id="btnSaveCustom" class="btn">Save</button>
+        <button id="btnClearCustom" class="btn ghost">Clear</button>
+        <span class="muted">After saving: the Planner is rebuilt.</span>
+      </div>
+    </div>
+  </div>
+
+  
+  <div id="tab-skill" class="tab-pane">
+    <div class="card">
+      <h2>Skill Test Log</h2>
+      <p class="muted">
+        Test every 12 weeks or whenever you feel ready for a heavier bell.<br>
+        Pass the test → start the next block with that weight.<br>
+        Standard flow: <b>180 → 240 → 300 → Test → next bell.</b><br>
+        If all Heavy-bias reps were clean this block → increase volume next block.
+      </p>
+
+      <!-- 1) One-arm swing — 10 per side -->
+      <div class="test-block" data-test="swing">
+        <h3>One-arm Swing (10 per side)</h3>
+        <div class="row">
+          <label>
+            Bell (kg)
+            <input type="number" id="test-swing-bell" min="4" max="48" step="2">
+          </label>
+          <div class="counter-group">
+            <span class="label">Left reps</span>
+            <div class="rep-counter" data-counter="test-swing-left">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+          <div class="counter-group">
+            <span class="label">Right reps</span>
+            <div class="rep-counter" data-counter="test-swing-right">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+        </div>
+        <label class="full">
+          Note
+          <input type="text" id="test-swing-notes" placeholder="e.g. 10/10 smooth, grip easy">
+        </label>
+        <button type="button" class="btn inline test-save-btn">Save test</button>
+        <p class="muted" id="test-swing-last"></p>
+      </div>
+
+      <!-- 2) Double clean — 5 total -->
+      <div class="test-block" data-test="clean">
+        <h3>Double Clean (5 total)</h3>
+        <div class="row">
+          <label>
+            Bell per hand (kg)
+            <input type="number" id="test-clean-bell" min="4" max="48" step="2">
+          </label>
+          <div class="counter-group">
+            <span class="label">Total reps</span>
+            <div class="rep-counter" data-counter="test-clean-reps">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+        </div>
+        <label class="full">
+          Note
+          <input type="text" id="test-clean-notes" placeholder="e.g. 5 reps, last heavy">
+        </label>
+        <button type="button" class="btn inline test-save-btn">Save test</button>
+        <p class="muted" id="test-clean-last"></p>
+      </div>
+
+      <!-- 3) Press — 5 per side -->
+      <div class="test-block" data-test="press">
+        <h3>Press (5 per side)</h3>
+        <div class="row">
+          <label>
+            Bell (kg)
+            <input type="number" id="test-press-bell" min="4" max="48" step="2">
+          </label>
+          <div class="counter-group">
+            <span class="label">Left reps</span>
+            <div class="rep-counter" data-counter="test-press-left">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+          <div class="counter-group">
+            <span class="label">Right reps</span>
+            <div class="rep-counter" data-counter="test-press-right">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+        </div>
+        <label class="full">
+          Note
+          <input type="text" id="test-press-notes" placeholder="e.g. 4+4, last rep grindy right">
+        </label>
+        <button type="button" class="btn inline test-save-btn">Save test</button>
+        <p class="muted" id="test-press-last"></p>
+      </div>
+
+      <!-- 4) Double front squat — 5 total -->
+      <div class="test-block" data-test="frontsquat">
+        <h3>Double Front Squat (5 total)</h3>
+        <div class="row">
+          <label>
+            Bell per hand (kg)
+            <input type="number" id="test-frontsquat-bell" min="4" max="48" step="2">
+          </label>
+          <div class="counter-group">
+            <span class="label">Total reps</span>
+            <div class="rep-counter" data-counter="test-frontsquat-reps">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+        </div>
+        <label class="full">
+          Note
+          <input type="text" id="test-frontsquat-notes" placeholder="e.g. 5 solid, core taxed">
+        </label>
+        <button type="button" class="btn inline test-save-btn">Save test</button>
+        <p class="muted" id="test-frontsquat-last"></p>
+      </div>
+
+      <!-- 5) Snatch 5 per side -->
+      <div class="test-block" data-test="snatch5">
+        <h3>Snatch (5 per side)</h3>
+        <div class="row">
+          <label>
+            Bell (kg)
+            <input type="number" id="test-snatch5-bell" min="8" max="40" step="2">
+          </label>
+          <div class="counter-group">
+            <span class="label">Left reps</span>
+            <div class="rep-counter" data-counter="test-snatch5-left">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+          <div class="counter-group">
+            <span class="label">Right reps</span>
+            <div class="rep-counter" data-counter="test-snatch5-right">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+        </div>
+        <label class="full">
+          Note
+          <input type="text" id="test-snatch5-notes" placeholder="e.g. 5/5 crisp, lockout clean">
+        </label>
+        <button type="button" class="btn inline test-save-btn">Save test</button>
+        <p class="muted" id="test-snatch5-last"></p>
+      </div>
+
+      <!-- 6) Get-up — 1 per side -->
+      <div class="test-block" data-test="getup">
+        <h3>Get-up (1 per side)</h3>
+        <div class="row">
+          <label>
+            Bell (kg)
+            <input type="number" id="test-getup-bell" min="4" max="48" step="2">
+          </label>
+          <div class="counter-group">
+            <span class="label">Left reps</span>
+            <div class="rep-counter" data-counter="test-getup-left">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+          <div class="counter-group">
+            <span class="label">Right reps</span>
+            <div class="rep-counter" data-counter="test-getup-right">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+        </div>
+        <label class="full">
+          Note
+          <input type="text" id="test-getup-notes" placeholder="e.g. 1+1 controlled, slow">
+        </label>
+        <button type="button" class="btn inline test-save-btn">Save test</button>
+        <p class="muted" id="test-getup-last"></p>
+      </div>
+
+      <!-- 7) 100 Snatch test -->
+      <div class="test-block" data-test="snatch100">
+        <h3>Snatch Test (100 reps &lt; 5:00)</h3>
+        <div class="row">
+          <label>
+            Bell (kg)
+            <input type="number" id="test-snatch100-bell" min="8" max="40" step="2">
+          </label>
+          <div class="counter-group">
+            <span class="label">Total reps</span>
+            <div class="rep-counter" data-counter="test-snatch100-reps">
+              <button type="button" class="rep-btn">−</button>
+              <span class="rep-value">0</span>
+              <button type="button" class="rep-btn">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="timer-row">
+          <span class="label">Time</span>
+          <div class="timer-controls">
+            <span id="test-snatch100-timer-display">00:00</span>
+            <button type="button" class="btn inline" id="test-snatch100-timer-toggle">Start</button>
+            <button type="button" class="btn inline ghost" id="test-snatch100-timer-reset">Reset</button>
+          </div>
+          <input type="hidden" id="test-snatch100-time">
+        </div>
+        <label class="full">
+          Note
+          <input type="text" id="test-snatch100-notes" placeholder="e.g. 100 reps in 6:14, grip fade at 80">
+        </label>
+        <button type="button" class="btn inline test-save-btn">Save test</button>
+        <p class="muted" id="test-snatch100-last"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast" aria-live="polite"></div>
+
+<script>
+(function(){
+  var LS_KEY='unity2025_state';
+  var COUNTERS_KEY='unity2025_counters';
+  var CUSTOM_KEY='unity2025_custom_matrix_v6';
+  var BARBELL_KEY='unity2025_barbell_map_v1';
+  var BLOCKS_KEY='unity_skill_blocks_v1';
+  var LAST_TEST_BLOCK_KEY='unity_skill_lastTestBlock_v1';
+  var SKILL_TEST_KEY='unity_skillTests_v1';
+  var PATTERNS=['Push','Pull','Squat','Lunge','Hinge','Rotation','Anti-Rotation','Loaded Carry'];
+  var WEEK_PCT={Deload:.15,Maintenance:.22,Development:.28,Stress:.35};
+  var SPLITS={3:[0.15,0.35,0.50],4:[0.15,0.22,0.28,0.35],5:[0.10,0.15,0.20,0.25,0.30]};
+  var DEFAULT_BALLISTICS=new Set(['Snatch','One-arm Swing','Two-arm Swing','Double Clean','Double Push Press']);
+
+  var CARRY_UNIT_SECONDS = 5;
+  var CARRY_MIN_SECONDS  = 30;
+  function carrySecondsFromUnits(units){
+    return Math.max(CARRY_MIN_SECONDS, (units|0) * CARRY_UNIT_SECONDS);
+  }
+
+  function loadSkillTests(){
+    try{
+      var raw=localStorage.getItem(SKILL_TEST_KEY);
+      return raw?JSON.parse(raw):{};
+    }catch(e){
+      console.warn('Skill tests corrupted, reset.',e);
+      return {};
+    }
+  }
+  function saveSkillTests(data){
+    try{localStorage.setItem(SKILL_TEST_KEY,JSON.stringify(data));}catch(e){}
+  }
+
+  function getBlockState(){
+    var blocksCompleted = (state && typeof state.completedBlocks!=='undefined') ? (state.completedBlocks|0) : 0;
+    var last = parseInt(localStorage.getItem(LAST_TEST_BLOCK_KEY)||'0',10);
+    if(isNaN(last)) last = 0;
+    try{ localStorage.setItem(BLOCKS_KEY,String(blocksCompleted)); }catch(e){}
+    return {blocksCompleted:blocksCompleted,lastSkillTestBlock:last};
+  }
+  function setLastTestBlockToCurrent(){
+    var st=getBlockState();
+    try{ localStorage.setItem(LAST_TEST_BLOCK_KEY,String(st.blocksCompleted)); }catch(e){}
+    updateSkillDot();
+  }
+  function updateSkillDot(){
+    var dot=document.getElementById('skillDot');
+    if(!dot) return;
+    var st=getBlockState();
+    var since = st.blocksCompleted - st.lastSkillTestBlock;
+    var show = since>=2;
+    dot.hidden = !show;
+  }
+
+  function initSkillRepCounters(){
+    document.querySelectorAll('.rep-counter').forEach(function(box){
+      var valueEl = box.querySelector('.rep-value');
+      if(!valueEl) return;
+      function update(delta){
+        var cur = parseInt(valueEl.textContent||'0',10);
+        if(isNaN(cur)) cur = 0;
+        var next = cur + delta;
+        if(next<0) next = 0;
+        if(next>200) next = 200;
+        valueEl.textContent = String(next);
+      }
+      box.addEventListener('click', function(ev){
+        var btn = ev.target.closest('.rep-btn');
+        if(!btn) return;
+        if(btn.textContent.trim()==='−' || btn.textContent.trim()==='-') update(-1);
+        else update(+1);
+      });
+    });
+  }
+  function getSkillCounterValue(name){
+    var el=document.querySelector('.rep-counter[data-counter="'+name+'"] .rep-value');
+    return el? (parseInt(el.textContent||'0',10)||0) : 0;
+  }
+
+  function secondsToMMSS(total){
+    var m=Math.floor(total/60);
+    var s=total%60;
+    return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  }
+
+  var snatchTimerSeconds=0;
+  var snatchTimerInterval=null;
+  function initSnatchTimer(){
+    var display=document.getElementById('test-snatch100-timer-display');
+    var toggle=document.getElementById('test-snatch100-timer-toggle');
+    var reset=document.getElementById('test-snatch100-timer-reset');
+    var hidden=document.getElementById('test-snatch100-time');
+    if(!display||!toggle||!reset||!hidden) return;
+
+    function sync(){
+      var txt=secondsToMMSS(snatchTimerSeconds);
+      display.textContent = txt;
+      hidden.value = txt;
+    }
+
+    toggle.addEventListener('click',function(){
+      if(snatchTimerInterval){
+        clearInterval(snatchTimerInterval);
+        snatchTimerInterval=null;
+        toggle.textContent='Start';
+      }else{
+        snatchTimerInterval=setInterval(function(){
+          snatchTimerSeconds+=1;
+          sync();
+        },1000);
+        toggle.textContent='Stop';
+      }
+    });
+    reset.addEventListener('click',function(){
+      if(snatchTimerInterval){
+        clearInterval(snatchTimerInterval);
+        snatchTimerInterval=null;
+        toggle.textContent='Start';
+      }
+      snatchTimerSeconds=0;
+      sync();
+    });
+    sync();
+  }
+
+  function formatLastLine(testId,entry,prefix){
+    if(!entry) return '';
+    if(testId==='swing'){
+      return prefix+': '+entry.bell+' kg, '+entry.left+'/'+entry.right+' reps. '+(entry.notes||'');
+    }
+    if(testId==='clean'){
+      return prefix+': '+entry.bell+' kg, '+entry.reps+' reps. '+(entry.notes||'');
+    }
+    if(testId==='press'){
+      return prefix+': '+entry.bell+' kg, '+entry.left+'/'+entry.right+' reps. '+(entry.notes||'');
+    }
+    if(testId==='frontsquat'){
+      return prefix+': '+entry.bell+' kg, '+entry.reps+' reps. '+(entry.notes||'');
+    }
+    if(testId==='snatch5'){
+      return prefix+': '+entry.bell+' kg, '+entry.left+'/'+entry.right+' reps. '+(entry.notes||'');
+    }
+    if(testId==='getup'){
+      return prefix+': '+entry.bell+' kg, '+entry.left+'/'+entry.right+' reps. '+(entry.notes||'');
+    }
+    if(testId==='snatch100'){
+      return prefix+': '+entry.bell+' kg, '+entry.reps+' reps in '+entry.time+'. '+(entry.notes||'');
+    }
+    return prefix+': '+(entry.notes||'');
+  }
+
+  function readTestInputs(testId){
+    if(testId==='swing'){
+      var bell = +((document.getElementById('test-swing-bell')||{}).value||0);
+      var left = getSkillCounterValue('test-swing-left');
+      var right = getSkillCounterValue('test-swing-right');
+      var notes = (document.getElementById('test-swing-notes')||{}).value||'';
+      if(!bell || (!left && !right)){
+        alert('Fill bell and reps for One-arm Swing.');
+        return null;
+      }
+      return {type:'swing',bell:bell,left:left,right:right,notes:notes.trim()};
+    }
+    if(testId==='clean'){
+      var bellC=+((document.getElementById('test-clean-bell')||{}).value||0);
+      var repsC=getSkillCounterValue('test-clean-reps');
+      var notesC=(document.getElementById('test-clean-notes')||{}).value||'';
+      if(!bellC || !repsC){
+        alert('Fill bell and reps for Double Clean.');
+        return null;
+      }
+      return {type:'clean',bell:bellC,reps:repsC,notes:notesC.trim()};
+    }
+    if(testId==='press'){
+      var bellP=+((document.getElementById('test-press-bell')||{}).value||0);
+      var leftP=getSkillCounterValue('test-press-left');
+      var rightP=getSkillCounterValue('test-press-right');
+      var notesP=(document.getElementById('test-press-notes')||{}).value||'';
+      if(!bellP || (!leftP && !rightP)){
+        alert('Fill bell and reps for Press.');
+        return null;
+      }
+      return {type:'press',bell:bellP,left:leftP,right:rightP,notes:notesP.trim()};
+    }
+    if(testId==='frontsquat'){
+      var bellF=+((document.getElementById('test-frontsquat-bell')||{}).value||0);
+      var repsF=getSkillCounterValue('test-frontsquat-reps');
+      var notesF=(document.getElementById('test-frontsquat-notes')||{}).value||'';
+      if(!bellF || !repsF){
+        alert('Fill bell and reps for Double Front Squat.');
+        return null;
+      }
+      return {type:'frontsquat',bell:bellF,reps:repsF,notes:notesF.trim()};
+    }
+    if(testId==='snatch5'){
+      var bellS5=+((document.getElementById('test-snatch5-bell')||{}).value||0);
+      var leftS5=getSkillCounterValue('test-snatch5-left');
+      var rightS5=getSkillCounterValue('test-snatch5-right');
+      var notesS5=(document.getElementById('test-snatch5-notes')||{}).value||'';
+      if(!bellS5 || (!leftS5 && !rightS5)){
+        alert('Fill bell and reps for Snatch (5 per side).');
+        return null;
+      }
+      return {type:'snatch5',bell:bellS5,left:leftS5,right:rightS5,notes:notesS5.trim()};
+    }
+    if(testId==='getup'){
+      var bellG=+((document.getElementById('test-getup-bell')||{}).value||0);
+      var leftG=getSkillCounterValue('test-getup-left');
+      var rightG=getSkillCounterValue('test-getup-right');
+      var notesG=(document.getElementById('test-getup-notes')||{}).value||'';
+      if(!bellG || (!leftG && !rightG)){
+        alert('Fill bell and reps for Get-up.');
+        return null;
+      }
+      return {type:'getup',bell:bellG,left:leftG,right:rightG,notes:notesG.trim()};
+    }
+    if(testId==='snatch100'){
+      var bellS=+((document.getElementById('test-snatch100-bell')||{}).value||0);
+      var repsS=getSkillCounterValue('test-snatch100-reps');
+      var timeStr=(document.getElementById('test-snatch100-time')||{}).value||'';
+      var notesS=(document.getElementById('test-snatch100-notes')||{}).value||'';
+      if(!bellS || !repsS || !timeStr){
+        alert('Fill bell, reps and time for Snatch Test.');
+        return null;
+      }
+      return {type:'snatch100',bell:bellS,reps:repsS,time:timeStr.trim(),notes:notesS.trim()};
+    }
+    alert('Unknown test id: '+testId);
+    return null;
+  }
+
+  function initSkillTestLog(){
+    var data = loadSkillTests();
+    Object.keys(data).forEach(function(testId){
+      var el=document.getElementById('test-'+testId+'-last');
+      if(!el) return;
+      el.textContent = formatLastLine(testId,data[testId],'Last test');
+    });
+
+    document.querySelectorAll('.test-block[data-test]').forEach(function(block){
+      var testId=block.getAttribute('data-test');
+      var btn=block.querySelector('.test-save-btn');
+      var lastEl=document.getElementById('test-'+testId+'-last');
+      if(!btn || !lastEl) return;
+      btn.addEventListener('click',function(){
+        var entry = readTestInputs(testId);
+        if(!entry) return;
+        entry.date = new Date().toISOString();
+        var cur = loadSkillTests();
+        cur[testId] = entry;
+        saveSkillTests(cur);
+        lastEl.textContent = formatLastLine(testId,entry,'Last test');
+        setLastTestBlockToCurrent();
+      });
+    });
+  }
+
+  function snapId(blockIdx, w, d){
+    return String(blockIdx|0)+'_'+String(w|0)+'_'+String(d|0);
+  }
+  function getSnapshotFor(w,d){
+    state.snapshots = state.snapshots || {};
+    return state.snapshots[ snapId(state.blockIdx||0, w, d) ] || null;
+  }
+  function setSnapshotFor(w,d,obj){
+    state.snapshots = state.snapshots || {};
+    state.snapshots[ snapId(state.blockIdx||0, w, d) ] = obj;
+    save();
+  }
+
+  function heavyBiasCapFor(blockVol){
+    if (+blockVol <= 180) return 1;
+    if (+blockVol <= 240) return 2;
+    return 3;
+  }
+
+  var MATRIX_ADV={
+    'Push':{ main:'Military Press', acc:['Double Push Press','Half-Kneeling Press','Bridge Floor Press'] },
+    'Pull':{ main:'Double Clean', acc:['Pull-up / Chin-up','Wide Row','Small Row'] },
+    'Squat':{ main:'Double Front Squat', acc:['(Box) Pistol','Step-up','Goblet Squat'] },
+    'Lunge':{ main:'Double Reverse Lunge', acc:['Tactical Lunge','Bulgarian Split Squat','Clean + Reverse Lunge'] },
+    'Hinge':{ main:'Two-arm Swing', acc:['Single-leg Glute Bridge','Double Deadlift','Double Snatch'] },
+    'Rotation':{ main:'Turkish Get Up', acc:['Windmill','Half-kneeling Lift','Bent Press'] },
+    'Anti-Rotation':{ main:'Snatch', acc:['One-arm Swing','Single-leg Deadlift','Renegade Row'] },
+    'Loaded Carry':{ main:'Suitcase Carry', acc:['Front Rack Carry','Overhead Carry','Bear Crawl'] }
+  };
+
+  function $(s){return document.querySelector(s);}
+  function toast(m){var t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(function(){t.style.display='none';},1500);}
+  function esc(s){return String(s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);});}
+  function clean(s){return String(s).replace(/\s+/g,' ').trim();}
+  function sanitizeName(s){var x=String(s||'').trim(); if(!x) return ''; if(x==='on'||x==='off') return ''; return x;}
+
+  function makeRNG(seed){
+    var h=2166136261>>>0;
+    if(seed){for(var i=0;i<seed.length;i++){h^=seed.charCodeAt(i);h=Math.imul(h,16777619);}}
+    else {h=(Date.now()>>>0);}
+    return function(){h+=0x6D2B79F5;var t=h;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
+  }
+  var rnd=makeRNG('');
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=Math.floor(rnd()*(i+1));var tmp=a[i];a[i]=a[j];a[j]=tmp;}return a;}
+
+  function roundsCap(v){
+    switch(+v){
+      case 180:return{rounds:3,cap:3};
+      case 240:return{rounds:3,cap:4};
+      case 300:return{rounds:3,cap:5};
+      case 400:return{rounds:4,cap:5};
+      case 500:return{rounds:5,cap:5};
+      default:return{rounds:3,cap:5};
+    }
+  }
+  function apportion2(total,weights){
+    var w=weights.slice();
+    var W=w.reduce(function(a,b){return a+b;},0);
+    if(W<=0)return Array(w.length).fill(0);
+    var raw=w.map(function(v){return (v*total)/W;});
+    var base=raw.map(function(x){return Math.floor(x);});
+    var rem=total-base.reduce(function(a,b){return a+b;},0);
+    var order=raw.map(function(x,i){return {i:i,frac:x-Math.floor(x)}}).sort(function(a,b){return b.frac-a.frac;});
+    for(var k=0;k<order.length&&rem>0;k++){base[order[k].i]+=1;rem--;}
+    return base;
+  }
+  function biasFromPct(weekType,pct){
+    var parts=(weekType==='Deload')?3:((weekType==='Stress')?5:4);
+    var base=SPLITS[parts].slice();
+    var mn=Math.min.apply(null,base),mx=Math.max.apply(null,base);
+    function eq(a,b){return Math.abs(a-b)<1e-9;}
+    if(eq(pct,mn))return'Heavy';
+    if(eq(pct,mx))return'Light';
+    return 'Medium';
+  }
+  function biasBadge(b){
+    return b==='Heavy' ? ' <span class="badge">▲ +1</span>' : (b==='Light' ? ' <span class="badge">▼ −1</span>' : '');
+  }
+  function takeRoundsLE(total, rounds){
+    if (!Number.isFinite(total) || total <= 0) return 0;
+    var k = Math.floor(total / rounds);
+    return Math.max(0, k * rounds);
+  }
+  function pickDays(count){var d=[0,1,2,3,4];shuffle(d);return d.slice(0,count).sort(function(a,b){return a-b;});}
+
+  function loadJSON(k,def){try{var v=localStorage.getItem(k);return v?JSON.parse(v):def}catch(e){return def}}
+  function saveJSON(k,o){try{localStorage.setItem(k,JSON.stringify(o))}catch(e){}}
+
+  var barbellMap=loadJSON(BARBELL_KEY,{
+    Push:'Barbell Bench Press',
+    Pull:'Barbell Row',
+    Squat:'Barbell Back Squat',
+    Hinge:'Barbell Deadlift'
+  })||{};
+  function saveBarbell(){saveJSON(BARBELL_KEY,barbellMap);}
+
+  var counters=loadJSON(COUNTERS_KEY,{})||{};
+  function countersSave(){saveJSON(COUNTERS_KEY,counters);}
+  function dayKey(){if(!state.plan||!state.cursor)return'nokey';var c=state.cursor;return String((state.blockIdx||0))+'_'+String(c.w)+'_'+String(c.d);}
+  function getCount(exKey){var k=dayKey();return (counters[k]&&counters[k][exKey])|0;}
+  function setCount(exKey,val,max){var k=dayKey();counters[k]=counters[k]||{};counters[k][exKey]=Math.max(0,Math.min(max,val|0));countersSave();}
+  function mkCounterHTML(exKey,max){var cur=getCount(exKey);var safe=exKey.replace(/&/g,'&amp;').replace(/</g,'&lt;');return'<span class="counter" data-ex="'+safe+'" data-max="'+max+'"><button class="cbtn" data-dec>−</button><span class="cval">'+cur+'/'+max+'</span><button class="cbtn" data-inc>+</button></span>';}
+
+  var customMatrix=loadJSON(CUSTOM_KEY,{})||{};
+  function inferBallistic(name){var nm=clean(name);return DEFAULT_BALLISTICS.has(nm)||/(swing|snatch|high pull|double clean)/i.test(nm)}
+  function inferUnilateral(name){
+    var n = clean(name).toLowerCase();
+    if(/double\s+snatch/i.test(n)) return false;
+    return /(one[-\s]?arm|single[-\s]?leg|split[-\s]?squat|pistol|step[-\s]?up|lunge|windmill|bent\s?press|half[-\s]?kneeling|kneeling|reverse\s?lunge|front[-\s]?rack\s?carry|suitcase\s?carry|overhead\s?carry|farmer|bottom[-\s]?up\s?carry|renegade\s?row|pull[-\s]?up|chin[-\s]?up|military\s?press|push\s?press|snatch)/i.test(n);
+  }
+
+  function seedFromUnity(){
+    var out={};
+    for(var pidx=0;pidx<PATTERNS.length;pidx++){
+      var p=PATTERNS[pidx];
+      var m=MATRIX_ADV[p];
+      var items=[];
+      items[0]={name:m.main,ballistic:inferBallistic(m.main),unilateral:inferUnilateral(m.main)};
+      for(var i=0;i<3;i++){
+        var nm=m.acc[i]||'';
+        items[i+1]={name:nm,ballistic:inferBallistic(nm),unilateral:inferUnilateral(nm)};
+      }
+      out[p]={enabled:true,items:items};
+    }
+    return out;
+  }
+  function sanitizeCustom(){
+    if(!customMatrix||!Object.keys(customMatrix).length){customMatrix=seedFromUnity();}
+    for(var pidx=0;pidx<PATTERNS.length;pidx++){
+      var p=PATTERNS[pidx];
+      if(!customMatrix[p]) customMatrix[p]={enabled:true,items:[{},{},{},{}]};
+      var it=customMatrix[p].items=customMatrix[p].items||[{},{},{},{}];
+      for(var i=0;i<4;i++){
+        it[i]=it[i]||{};
+        it[i].name=sanitizeName(it[i].name||'');
+        if(!it[i].name){
+          var seed=seedFromUnity()[p].items[i];
+          it[i].name=seed.name; it[i].ballistic=seed.ballistic; it[i].unilateral=seed.unilateral;
+        }else{
+          if(typeof it[i].ballistic!=='boolean') it[i].ballistic=inferBallistic(it[i].name);
+          if(typeof it[i].unilateral!=='boolean') it[i].unilateral=inferUnilateral(it[i].name);
+        }
+      }
+    }
+    saveJSON(CUSTOM_KEY,customMatrix);
+  }
+  function effectiveMatrix(){
+    sanitizeCustom();
+    var out={};
+    for(var pidx=0;pidx<PATTERNS.length;pidx++){
+      var p=PATTERNS[pidx];
+      var it=customMatrix[p].items;
+      out[p]={main:it[0].name,acc:[it[1].name,it[2].name,it[3].name].filter(Boolean)};
+    }
+    return out;
+  }
+  function isUsingDefaultMatrix(){
+    // Returns true if the current customMatrix matches the Unity defaults (no custom overrides)
+    var seed = seedFromUnity();
+    sanitizeCustom();
+    for(var pidx=0;pidx<PATTERNS.length;pidx++){
+      var p = PATTERNS[pidx];
+      var it = (customMatrix[p] && customMatrix[p].items) || [];
+      var seedIt = seed[p].items || [];
+      for(var i=0;i<4;i++){
+        var cur = it[i] || {};
+        var base = seedIt[i] || {};
+        var nameCur = sanitizeName(cur.name||'');
+        var nameBase = sanitizeName(base.name||'');
+        if(nameCur !== nameBase) return false;
+        if(!!cur.ballistic !== !!base.ballistic) return false;
+        if(!!cur.unilateral !== !!base.unilateral) return false;
+      }
+    }
+    return true;
+  }
+
+  function rotationUsesTGU(){
+    // Returns true if the current Rotation main exercise is literally 'Turkish Get Up'
+    sanitizeCustom();
+    var rot = customMatrix['Rotation'] && customMatrix['Rotation'].items || [];
+    var mainName = sanitizeName((rot[0] && rot[0].name) || '');
+    return mainName === 'Turkish Get Up';
+  }
+
+  function isBallisticName(nm){
+    var name=clean(nm);
+    for(var pidx=0;pidx<PATTERNS.length;pidx++){
+      var p=PATTERNS[pidx]; var conf=customMatrix[p];
+      if(!conf||!conf.items)continue;
+      for(var j=0;j<conf.items.length;j++){
+        var it=conf.items[j];
+        if(clean(it.name)===name) return !!it.ballistic;
+      }
+    }
+    return DEFAULT_BALLISTICS.has(name);
+  }
+  function isUnilateralName(nm){
+    var name=clean(nm);
+    for(var pidx=0;pidx<PATTERNS.length;pidx++){
+      var p=PATTERNS[pidx]; var conf=customMatrix[p];
+      if(!conf||!conf.items)continue;
+      for(var j=0;j<conf.items.length;j++){
+        var it=conf.items[j];
+        if(clean(it.name)===name) return !!it.unilateral;
+      }
+    }
+    return inferUnilateral(name);
+  }
+
+  var state=loadJSON(LS_KEY,null)||{};
+  function save(){saveJSON(LS_KEY,state);}
+  function doneKeyFor(w,d){return String((state.blockIdx||0))+'_'+String(w)+'_'+String(d);}
+  function markDone(w,d){state.completed = state.completed || {}; state.completed[ doneKeyFor(w,d) ] = true; save();}
+  function isDone(w,d){return !!(state.completed && state.completed[ doneKeyFor(w,d)]);}
+  function getAccCursor(pattern){state.accCursor = state.accCursor || {}; return state.accCursor[pattern] | 0;}
+  function setAccCursor(pattern, val){state.accCursor = state.accCursor || {}; state.accCursor[pattern] = val | 0; save();}
+
+  function buildWeekSplitsWithPcts(blockVol,weekType){
+    var parts=(weekType==='Deload')?3:(weekType==='Stress'?5:4);
+    var base=SPLITS[parts].slice();
+    var rc=roundsCap(blockVol);
+    var weekTotal=Math.round(blockVol*(WEEK_PCT[weekType]||0));
+    var sess=base.map(function(p){return Math.max(rc.rounds,Math.round((weekTotal*p)/rc.rounds)*rc.rounds);});
+    var diff=weekTotal-sess.reduce(function(a,b){return a+b;},0),idx=sess.length-1;
+    while(Math.abs(diff)>=rc.rounds){
+      if(diff>0){sess[idx]+=rc.rounds;diff-=rc.rounds;}
+      else if(sess[idx]-rc.rounds>=rc.rounds){sess[idx]-=rc.rounds;diff+=rc.rounds;}
+      else{if(idx>0){idx--;continue;}break;}
+    }
+    var o=sess.map(function(_,i){return i;});shuffle(o);
+    return o.map(function(i){return {vol:sess[i],pct:base[i]};});
+  }
+
+  function buildPlan(cfg){
+    var matrix=effectiveMatrix();
+    rnd=makeRNG(cfg.seed||'');
+    var lastEnds=state.lastEnds||{};
+    var weekOrders={};
+    for(var p in matrix){
+      var order=['Deload','Maintenance','Development','Stress']; shuffle(order);
+      if(lastEnds[p]&&order[0]===lastEnds[p]){var tmp=order[0];order[0]=order[1];order[1]=tmp;}
+      weekOrders[p]=order;
+    }
+    var weeks=[]; for(var w=0;w<4;w++){var days=[]; for(var dd=0;dd<5;dd++){days.push({entries:[],ps:null});} weeks.push({days:days});}
+    var carrySeq = 0;
+
+    for(var pat in matrix){
+      for(var w2=0;w2<4;w2++){
+        var wt=weekOrders[pat][w2];
+        var items=buildWeekSplitsWithPcts(cfg.volume,wt);
+        var dayIdxs=pickDays(items.length);
+        for(var i2=0;i2<items.length;i2++){
+          var d=dayIdxs[i2];
+          var obj={
+            pattern:pat, main:matrix[pat].main, acc:matrix[pat].acc.slice(0),
+            weekType:wt, volume:items[i2].vol, pct:items[i2].pct, bias:biasFromPct(wt,items[i2].pct)
+          };
+          if(pat==='Loaded Carry'){ obj.isCarry = true; obj.carryMain = (carrySeq % 2 === 0); carrySeq++; }
+          weeks[w2].days[d].entries.push(obj);
+        }
+      }
+    }
+    if(cfg.psPattern){
+      try{
+        var psPat=cfg.psPattern;
+        var psBlock=+cfg.psVolume||240;
+        var fixed=['Deload','Development','Maintenance','Stress'];
+        for(var w3=0;w3<4;w3++){
+          var wt2=fixed[w3];
+          var weekVol=Math.round(psBlock*(WEEK_PCT[wt2]||0));
+          for(var dd2=0;dd2<5;dd2++){
+            weeks[w3].days[dd2].entries = weeks[w3].days[dd2].entries.filter(function(en){return en.pattern!==psPat;});
+          }
+          var dayIdxs2=pickDays(3);
+          var weights=[50,35,15], labels=['L','M','H'], shOnHigh=false;
+          if(cfg.psAdvanced){weights=[30,55,15]; shOnHigh=true;}
+          var sessVols=apportion2(weekVol,weights);
+          var psMain=(matrix[psPat]&&matrix[psPat].main)?matrix[psPat].main:psPat;
+          for(var ii=0;ii<3;ii++){
+            var d2=dayIdxs2[ii];
+            weeks[w3].days[d2].ps = weeks[w3].days[d2].ps || {};
+            weeks[w3].days[d2].ps[psPat] = {weekType:wt2,reps:sessVols[ii],mainName:psMain,level:labels[ii],sh:(labels[ii]==='H'&&shOnHigh),mode:cfg.psAdvanced?'advanced':'basic'};
+          }
+        }
+      }catch(e){
+        if(typeof console!=='undefined' && console && console.error){ console.error(e); }
+      }
+    }
+    return { weeks: weeks, rc: roundsCap(cfg.volume), weekOrders: weekOrders, set: 'advanced' };
+  }
+
+
+  function computeSessionReps(w,d){
+    if(!state.plan) return null;
+    var week = state.plan.weeks[w];
+    if(!week) return null;
+    var day = week.days[d] || {};
+    var entries = day.entries || [];
+    var rc = state.plan.rc || {};
+    var rounds = rc.rounds || 0;
+    var total = 0;
+
+    // 1) Rotation opener (Get-Up logic: Turkish Get Up vs Get-Up Sit-Up on Heavy bias)
+    var rot = null;
+    for (var i=0;i<entries.length;i++){
+      if(entries[i].pattern === 'Rotation'){ rot = entries[i]; break; }
+    }
+    if(rot && rotationUsesTGU()){
+      var sets = rounds;
+      var biasOn = !!(state.cfg && state.cfg.bias === 'on');
+      var rotBias = biasOn ? (rot.bias || 'Medium') : 'Medium';
+      var repsPerSet = 0;
+      if (biasOn && rotBias === 'Heavy'){
+        // Heavy bias = Get-Up Sit-Up, reps per side depend on block volume
+        var vol = (state.cfg && state.cfg.volume) ? +state.cfg.volume : 300;
+        var repsPerSide = 3;
+        if (vol <= 180) repsPerSide = 1;
+        else if (vol <= 240) repsPerSide = 2;
+        repsPerSet = repsPerSide * 2; // N+N per set
+      } else {
+        var isLight = (biasOn && rotBias === 'Light');
+        repsPerSet = isLight ? 4 : 2; // 2+2 vs 1+1 Turkish Get Up
+      }
+      total += sets * repsPerSet;
+    }
+
+    // 2) Main patterns (zonder Rotation & Loaded Carry)
+    for(var j=0;j<entries.length;j++){
+      var e = entries[j];
+      if(e.pattern === 'Rotation' || e.pattern === 'Loaded Carry') continue;
+      total += (e.volume | 0);
+    }
+
+    // 3) Loaded Carry als "rep-equivalent"
+    for(var k=0;k<entries.length;k++){
+      var e2 = entries[k];
+      if(e2.pattern === 'Loaded Carry'){
+        total += (e2.volume | 0);
+      }
+    }
+
+    // 4) PlanStrong / PS overlay
+    if(day.ps){
+      for(var key in day.ps){
+        if(!day.ps.hasOwnProperty(key)) continue;
+        var info = day.ps[key] || {};
+        total += (info.reps | 0);
+      }
+    }
+
+    return total;
+  }
+
+  function renderSession(){
+    var out=$('#session'); if(!state.plan){out.textContent='No block yet. Use Settings to apply settings & create a new block.';return;}
+    var w=state.cursor.w, d=state.cursor.d; var week=state.plan.weeks[w]; var day=week.days[d]; var rc=state.plan.rc;
+    var isBarbell = !!(state.cfg && state.cfg.barbellMode);
+
+    var openerHTML='', circuitExercises=[], carryFinisher=null;
+    var snap = getSnapshotFor(w,d);
+    if (snap){
+      openerHTML = snap.openerHTML || '';
+      circuitExercises = (snap.circuit || []).slice(0);
+      carryFinisher = snap.carryFinisher || null;
+    } else {
+      var tmp = computeSnapshotFor(w,d);
+      setSnapshotFor(w,d,tmp);
+      openerHTML = tmp.openerHTML; 
+      circuitExercises = tmp.circuit.slice(0); 
+      carryFinisher = tmp.carryFinisher || null;
+    }
+
+    var html=[];
+    var doneMark = isDone(w,d) ? ' — ✔' : '';
+    var baseKB = (state.cfg && state.cfg.baseKB) ? state.cfg.baseKB : '';
+    var headerLine = 'Week '+String(w+1)+', Day '+String(d+1)+doneMark;
+    var kbBadge = baseKB ? ' <span class="badge">KB ['+esc(baseKB)+']</span>' : '';
+    html.push('<div class="line"><div class="txt">'+esc(headerLine)+'</div><div>'+kbBadge+'</div></div>');
+    var totalReps = computeSessionReps(w,d);
+    var runToggle = document.getElementById('chkRunAuto');
+    var allowRun = !runToggle || runToggle.checked;
+    if (allowRun && totalReps !== null && state && state.cfg && state.cfg.volume){
+      var v = +state.cfg.volume;
+      var cutoff;
+      if (v <= 180) cutoff = 45;
+      else if (v <= 240) cutoff = 60;
+      else if (v <= 300) cutoff = 75;
+      else if (v <= 400) cutoff = 100;
+      else cutoff = 125;
+      if (totalReps < cutoff){
+        html.push('<div class="pill">Optional Run: 20–30 min @ MAF</div>');
+      }
+    }
+    html.push('<br><hr>');
+    html.push('<details class="acc-section"><summary>Warm-up</summary><div class="panel"><p class="muted">Optional 5–7 minute preparation before Unity.</p><h3>Sequence</h3><ul><li><b>Head nods</b> — 20 up/down, 20 side-to-side (ear to shoulder)</li><li><b>Cross crawls</b> — 20 total</li></ul><h3>Rocking</h3><ul><li>10× rocking with dorsiflexion (toes up)</li><li>10× rocking with plantarflexion (toes down)</li><li>5× rocking with one leg extended sideways</li></ul><h3>Segmental rolls</h3><ul><li>3× per arm</li><li>3× per leg</li></ul><h3>Crawling</h3><ul><li>2 minutes, easy pace, smooth breathing</li></ul></div></details>');
+    html.push('<hr>');
+    if(openerHTML){
+      html.push(openerHTML);
+    } else {
+      html.push('—');
+    }
+    html.push('<hr>',esc(String(rc.rounds)+' rounds of the following circuit:'),'<br>');
+    if(circuitExercises.length){
+      html.push(circuitExercises.map(function(o){
+        return '<div class="line"><div class="txt">'+esc(o.repText)+' '+esc(o.name)+(o.label||'')+'</div>'+mkCounterHTML('Circuit — '+esc(o.name),rc.rounds)+'</div>';
+      }).join(''));
+    }else{
+      html.push(esc('(No patterns in the circuit today)'));
+    }
+    html.push('<hr><br>');
+    if (carryFinisher){
+      html.push( esc('[ '+String(carryFinisher.seconds)+'s '+carryFinisher.name+' ]') );
+    } else {
+      html.push( esc('[ — ]') );
+    }
+    html.push('<hr>');
+    html.push('<details class="acc-section"><summary>Cooling Down</summary><div class="panel"><h3>Diaphragmatic Breathing — 2 minutes</h3><ul><li>Sit or lie comfortably.</li><li><b>Bottom hand:</b> on your lower belly.</li><li><b>Top hand:</b> on your sternum (breastbone).</li><li>Inhale slowly through the nose so that only the bottom hand moves.</li><li>The top hand should stay as still as possible.</li><li>Exhale gently through the nose or mouth while keeping the ribcage soft.</li><li>Maintain this pattern for about 2 minutes.</li></ul><h3>Trifecta Reset — 10–20 seconds each</h3><h4>L-Sit Hold (10–20 seconds)</h4><ul><li>Bent knees are fine.</li><li>Ribcage down, slight posterior pelvic tilt.</li><li>Think “light hollow”, not maximal tension.</li></ul><h4>Bridge Hold (10–20 seconds)</h4><ul><li>Lift your hips without forcing the lower back into hyperextension.</li><li>Focus on opening the front chain (hip flexors / abdomen).</li><li>Keep breathing softly.</li></ul><h4>Spinal Twist (10–20 seconds per side)</h4><ul><li>Low, gentle rotation.</li><li>Rotate only as far as you can feel the piriformis / glute / lower back engage and release.</li><li>Do not force the range.</li></ul><p class="muted">Recommended order: Diaphragmatic Breathing → L-Sit → Bridge → Twist.</p></div></details>');
+var finishedBlocks = (state.completedBlocks|0);
+    html.push('<br>', '<div class="muted">Finished blocks: '+String(finishedBlocks)+'</div>');
+    document.getElementById('session').innerHTML=html.join('');
+
+    document.querySelectorAll('.counter').forEach(function($c){
+      var ex=$c.getAttribute('data-ex'); var max=+$c.getAttribute('data-max');
+      var $v=$c.querySelector('.cval');
+      var upd=function(){ $v.textContent=String(getCount(ex))+'/'+String(max); };
+      $c.querySelector('[data-inc]').onclick=function(){ setCount(ex,getCount(ex)+1,max); upd(); };
+      $c.querySelector('[data-dec]').onclick=function(){ setCount(ex,getCount(ex)-1,max); upd(); };
+    });
+  }
+
+  function renderInfo(){
+    if(!state.plan){$('#kpi').innerHTML='';$('#orders').innerHTML='';return;}
+    var rc=state.plan.rc;
+    var pills=[];
+    pills.push('<span class="pill">Volume: '+String(state.cfg.volume)+'</span>');
+    pills.push('<span class="pill">Rounds: '+String(rc.rounds)+'</span>');
+    pills.push('<span class="pill">Cap/round: '+String(rc.cap)+'</span>');
+    pills.push('<span class="pill">Heavy cap: '+String(heavyBiasCapFor(state.cfg.volume))+' (by volume)</span>');
+    pills.push('<span class="pill">Block #'+String(state.blockIdx)+'</span>');
+    pills.push('<span class="pill">KB base: '+(state.cfg.baseKB||'-')+'</span>');
+    pills.push('<span class="pill">Finished blocks: '+String(state.completedBlocks|0)+'</span>');
+    pills.push('<span class="pill">KB bias: '+(state.cfg.bias==='on'?'On (▲/▼)':'Off')+'</span>');
+    if(state.cfg.psPattern){pills.push('<span class="pill">Strength Focus: '+state.cfg.psPattern+' • Vol: '+state.cfg.psVolume+' • '+(state.cfg.psAdvanced?'Advanced (H+SH)':'Basic')+'</span>');}
+    document.getElementById('kpi').innerHTML=pills.join(' ');
+    var rows=[]; for(var k in state.plan.weekOrders){rows.push(k+': <b>'+state.plan.weekOrders[k].join(' → ')+'</b>');}
+    document.getElementById('orders').innerHTML=rows.join('<br>');
+  }
+
+  function firstNonEmpty(plan){
+    for(var w=0;w<plan.weeks.length;w++){
+      for(var d=0;d<plan.weeks[w].days.length;d++){
+        if(plan.weeks[w].days[d].entries.length>0||plan.weeks[w].days[d].ps){return{w:w,d:d};}
+      }
+    }
+    return {w:0,d:0};
+  }
+
+  function computeSnapshotFor(w,d){
+    var week = state.plan.weeks[w];
+    var day  = week.days[d];
+    var rc   = state.plan.rc;
+
+    var openerHTML = '';
+    var rot=null;
+    for(var ii=0; ii<(day.entries||[]).length; ii++){
+      if(day.entries[ii].pattern==='Rotation'){ rot=day.entries[ii]; break; }
+    }
+    if(rot && rotationUsesTGU()){
+      var sets = rc.rounds;
+      var cost = rc.cap * sets;
+      var biasOn = (state.cfg && state.cfg.bias === 'on');
+      var rotBias = biasOn ? (rot.bias || 'Medium') : 'Medium';
+      var isHeavy = biasOn && rotBias === 'Heavy';
+      var isLight = biasOn && rotBias === 'Light';
+      var badge  = biasOn ? biasBadge(rotBias) : '';
+      var repStr;
+      var counterLabel;
+
+      if (isHeavy){
+        // Heavy bias = Get-Up Sit-Up, reps per side depend on block volume
+        var vol = (state.cfg && state.cfg.volume) ? +state.cfg.volume : 300;
+        var repsPerSide = 3;
+        if (vol <= 180) repsPerSide = 1;
+        else if (vol <= 240) repsPerSide = 2;
+        repStr = String(sets)+' × ('+String(repsPerSide)+'+'+String(repsPerSide)+') Get-Up Sit-Up'+badge;
+        counterLabel = 'Opener — Get-Up Sit-Up';
+      } else {
+        var pair = isLight ? '2+2' : '1+1';
+        repStr = String(sets)+' × ('+pair+') Turkish Get Up'+badge;
+        counterLabel = 'Opener — Turkish Get Up';
+      }
+
+      openerHTML = '<div class="line"><div class="txt">'+repStr+'</div>'+mkCounterHTML(counterLabel,sets)+'</div>';
+      rot.volume = Math.max(0,(rot.volume|0)-cost);
+    }
+
+
+    var baseEntries = (day.entries||[]).slice(0).filter(function(e){return e.pattern!=='Loaded Carry';});
+    shuffle(baseEntries);
+    var circuitExercises = [];
+
+    if(day.ps){
+      var rounds=rc.rounds;
+      for(var key in day.ps){
+        var info=day.ps[key];
+        var T=Math.max(0,info.reps|0), buckets, labels;
+        if(info.mode==='advanced'||info.sh){buckets=apportion2(T,[45,30,20,5]);labels=['L','M','H','SH'];}
+        else {buckets=apportion2(T,[50,35,15]);labels=['L','M','H'];}
+        var perRound=[], roundLabels=[];
+        for(var bi=0;bi<buckets.length;bi++){ perRound[bi] = apportion2(buckets[bi], Array(rounds).fill(1)); }
+        for(var rr=0;rr<rounds;rr++){
+          var parts=[]; for(var li=0; li<labels.length; li++){ if(perRound[li][rr]>0) parts.push(labels[li]+String(perRound[li][rr])); }
+          roundLabels.push(parts.length?parts.join('/'):'—');
+        }
+        var detail=roundLabels.map(function(s,i){return 'R'+String(i+1)+':'+s;}).join(' • ');
+        circuitExercises.push({name:'PS — '+info.mainName,repText:String(rounds)+' rounds',label:' — '+info.level+(info.sh?' (H+SH)':'')+' — '+detail});
+      }
+    }
+
+    state.accTotals = state.accTotals || {};
+    for(var ei=0; ei<baseEntries.length; ei++){
+      var e=baseEntries[ei];
+
+      // Main altijd eerst, maar bij Rotation gebruiken we de main (Get Up)
+      // alleen als opener. Alle leftover volume gaat naar de Rotation-accessoires,
+      // precies zoals bij de andere patronen.
+      var order = [e.main].concat(e.acc || []).filter(Boolean);
+      var accList = (e.pattern === 'Rotation')
+        ? (e.acc || [])      // Rotation: alleen accessoires in de circuit-logica
+        : order.slice(1);    // alle andere patronen: main + accessoires zoals altijd
+
+      var remaining=e.volume;
+
+      if(e.pattern!=='Rotation' && order.length>0){
+        var nm=order[0];
+        var isBarbell = !!(state.cfg && state.cfg.barbellMode);
+        if(isBarbell && (e.bias==='Heavy') && (e.pattern==='Push'||e.pattern==='Pull'||e.pattern==='Squat'||e.pattern==='Hinge')){
+          var repl=(barbellMap[e.pattern]||'').trim(); if(repl) nm=repl;
+        }
+        var isLightBoost=(state.cfg.bias==='on' && e.bias==='Light' && !day.ps);
+        var isHeavyBias =(state.cfg.bias==='on' && e.bias==='Heavy' && !day.ps);
+        var heavyCap    = heavyBiasCapFor(state.cfg.volume);
+        var targetCap   = isHeavyBias ? heavyCap : (isLightBoost ? 10 : rc.cap);
+        var assign      = Math.min(targetCap*rc.rounds, takeRoundsLE(remaining, rc.rounds));
+        var perRound    = Math.floor(assign/rc.rounds);
+        if(perRound>0){
+          var isBall=isBallisticName(nm), isUni=isUnilateralName(nm);
+          var shown=perRound*(isBall?2:1);
+          var repTxt=isUni?String(shown)+'+'+String(shown):String(shown);
+          var label=(state.cfg.bias==='on'&&!day.ps)?biasBadge(e.bias):'';
+          circuitExercises.push({name:nm,repText:repTxt,label:label});
+          remaining-=assign;
+        }
+      }
+
+      var assignedSomething=false;
+      if(accList.length>0 && remaining>0){
+        state.accTotals[e.pattern] = state.accTotals[e.pattern] || {};
+        for(var ii2=0; ii2<accList.length; ii2++){
+          var nmx=accList[ii2]; if(!state.accTotals[e.pattern].hasOwnProperty(nmx)) state.accTotals[e.pattern][nmx]=0;
+        }
+        var accOrder = accList.slice(0).sort(function(a,b){
+          return (state.accTotals[e.pattern][a]|0) - (state.accTotals[e.pattern][b]|0);
+        });
+        for(var ai=0; ai<accOrder.length; ai++){
+          if(remaining<=0) break;
+          var nm2=accOrder[ai]; if(!nm2) continue;
+          var maxAccThis=state.plan.rc.cap*state.plan.rc.rounds;
+          var assignAcc=Math.min(maxAccThis, takeRoundsLE(remaining, state.plan.rc.rounds));
+          var perRound2=Math.floor(assignAcc/state.plan.rc.rounds);
+          if(perRound2<=0) continue;
+          var isBall2=isBallisticName(nm2), isUni2=isUnilateralName(nm2);
+          var shown2=perRound2*(isBall2?2:1);
+          var repTxt2=isUni2?String(shown2)+'+'+String(shown2):String(shown2);
+          circuitExercises.push({name:nm2,repText:repTxt2,label:''});
+          remaining-=assignAcc; assignedSomething=true;
+          state.accTotals[e.pattern][nm2]=(state.accTotals[e.pattern][nm2]|0)+assignAcc;
+        }
+      }
+      if(accList.length>0 && assignedSomething){
+        state.pendingAccAdvance = state.pendingAccAdvance || {};
+        var dk = dayKey(); var arr = state.pendingAccAdvance[dk] || [];
+        if(arr.indexOf(e.pattern)===-1) arr.push(e.pattern);
+        state.pendingAccAdvance[dk] = arr;
+      }
+    }
+
+    shuffle(circuitExercises);
+
+    var carryFinisher=null;
+    try{
+      var carryEntry=(day.entries||[]).find(function(e){return e.pattern==='Loaded Carry';});
+      if(carryEntry){
+        var isMainDay = !!carryEntry.carryMain;
+
+        var name;
+        if(isMainDay){
+          name = (MATRIX_ADV['Loaded Carry'].main || 'Suitcase Carry');
+        }else{
+          var accs=(MATRIX_ADV['Loaded Carry'].acc||[]).slice(0);
+          if(!accs.length){ accs=['Front Rack Carry','Bottom-Up Rack Carry','Bear Crawl']; }
+          state.carryAccTotals = state.carryAccTotals || {};
+          accs.forEach(function(k){ if(!state.carryAccTotals.hasOwnProperty(k)) state.carryAccTotals[k]=0; });
+          accs.sort(function(a,b){
+            return (state.carryAccTotals[a]|0) - (state.carryAccTotals[b]|0);
+          });
+          name = accs[0];
+        }
+
+        var units = Math.max(1, (carryEntry.volume|0));
+        var secs  = carrySecondsFromUnits(units);
+        if(!isMainDay){
+          state.carryAccTotals[name] = (state.carryAccTotals[name]|0) + units;
+        }
+        carryFinisher = { name:name, seconds:secs };
+      }
+    }catch(_){}
+
+    return {
+      openerHTML: openerHTML,
+      circuit: circuitExercises.slice(0),
+      carryFinisher: carryFinisher
+    };
+  }
+
+  function newBlock(){
+    var cfg=readCfg();
+    var plan=buildPlan(cfg);
+    var blockIdx=(state.blockIdx||0)+1;
+
+    state={
+      blockIdx: blockIdx,
+      cfg: cfg,
+      plan: plan,
+      cursor: firstNonEmpty(plan),
+      lastEnds: state.lastEnds||{},
+      completed: {},
+      completedBlocks: (state.completedBlocks|0),
+      accCursor: state.accCursor || {},
+      accStart: {},
+      pendingAccAdvance: {},
+      carryRun: (state.carryRun|0),
+      accTotals: {},
+      snapshots: {},
+      carrySeq: 0,
+      carryAccTotals: {}
+    };
+    save();
+
+    (function precomputeAll(){
+      var prevCur = state.cursor;
+      for (var ww=0; ww<state.plan.weeks.length; ww++){
+        for (var dd=0; dd<state.plan.weeks[ww].days.length; dd++){
+          state.cursor = {w: ww, d: dd};
+          var snap = computeSnapshotFor(ww, dd);
+          setSnapshotFor(ww, dd, snap);
+        }
+      }
+      state.cursor = prevCur;
+      save();
+    })();
+
+    renderInfo(); renderSession(); wireLiveKB(); toast('Block created');
+    updateSkillDot();
+  }
+
+  function next(){
+    if(!state.plan){newBlock();return;}
+    var w=state.cursor.w, d=state.cursor.d; var weeks=state.plan.weeks;
+    d++; if(d>=weeks[w].days.length){d=0; w++;}
+    if(w>=weeks.length){
+      var ends={}; var matrix=effectiveMatrix();
+      for(var pat in matrix){ ends[pat]=state.plan.weekOrders[pat][3]; }
+      state.lastEnds=ends;
+      state.completedBlocks = (state.completedBlocks|0) + 1;
+      save();
+      updateSkillDot();
+      toast('Block finished');
+      return;
+    }
+    state.cursor={w:w,d:d}; save(); renderSession(); wireLiveKB();
+  }
+  function prev(){
+    if(!state.plan) return;
+    var w=state.cursor.w, d=state.cursor.d;
+    d--;
+    if(d<0){ w--; if(w<0){w=0; d=0;} else { d=state.plan.weeks[w].days.length-1; } }
+    state.cursor={w:w,d:d}; save(); renderSession(); wireLiveKB();
+  }
+  function complete(){
+    if(!state.plan) return;
+    var w=state.cursor.w, d=state.cursor.d;
+
+    var key = dayKey();
+    var pend = (state.pendingAccAdvance && state.pendingAccAdvance[key]) || [];
+    if (pend.length) {
+      for (var i=0;i<pend.length;i++) {
+        var pat = pend[i];
+        setAccCursor(pat, (getAccCursor(pat) | 0) + 1);
+      }
+      delete state.pendingAccAdvance[key];
+      save();
+    }
+    markDone(w,d);
+    next();
+  }
+  function resetProgress(){
+    localStorage.removeItem(LS_KEY); state={};
+    localStorage.removeItem(BLOCKS_KEY);
+    localStorage.removeItem(LAST_TEST_BLOCK_KEY);
+    document.getElementById('session').textContent='Progress cleared. Click “New Block”.';
+    document.getElementById('kpi').innerHTML=''; document.getElementById('orders').innerHTML=''; toast('Progress reset');
+    updateSkillDot();
+  }
+  function readCfg(){
+    var psPatSel=(document.getElementById('selPS').value||''); var on=!!psPatSel;
+    return {
+      volume:+document.getElementById('selVol').value,
+      seed:(document.getElementById('inpSeed').value||'').trim(),
+      bias:document.getElementById('selBias').value,
+      psPattern: on ? psPatSel : null,
+      psVolume:  on ? document.getElementById('selPSVol').value : null,
+      psAdvanced:(document.getElementById('chkPSAdvanced') && !document.getElementById('chkPSAdvanced').disabled) ? document.getElementById('chkPSAdvanced').checked : false,
+      baseKB:(document.getElementById('inpBaseKB') ? document.getElementById('inpBaseKB').value : '').trim(),
+      barbellMode: !!document.getElementById('chkBarbellMode').checked
+    };
+  }
+
+
+  function applyDefaultSkillBells(){
+    try{
+      // 1) Determine Base KB from state or from the input field
+      var baseStr = (state && state.cfg && state.cfg.baseKB) || '';
+      if(!baseStr){
+        var baseInput = document.getElementById('inpBaseKB');
+        if(baseInput){ baseStr = baseInput.value || ''; }
+      }
+      var base = parseInt(baseStr,10);
+      if(!base || isNaN(base)) return;
+
+      // 2) Heavy = Base + 4, Light = Base - 4
+      var heavy = base + 4;
+      var light = base - 4;
+
+      function setIfEmpty(id, value){
+        var el = document.getElementById(id);
+        if(!el) return;
+        // Only fill if empty or 0
+        if(el.value === '' || el.value === '0'){
+          el.value = value;
+        }
+      }
+
+      // Technique tests → Heavy Bias bell
+      [
+        'test-swing-bell',
+        'test-clean-bell',
+        'test-press-bell',
+        'test-frontsquat-bell',
+        'test-snatch5-bell',
+        'test-getup-bell'
+      ].forEach(function(id){
+        setIfEmpty(id, heavy);
+      });
+
+      // Snatch volume test → Light Bias bell
+      if(light < 4){ light = base; } // safety: if Base is already very light
+      setIfEmpty('test-snatch100-bell', light);
+    }catch(e){
+      console.warn('applyDefaultSkillBells failed', e);
+    }
+  }
+
+  document.querySelectorAll('.tab-btn').forEach(function(btn){
+    btn.onclick=function(){
+      var t=btn.getAttribute('data-tab');
+      document.querySelectorAll('.tab-btn').forEach(function(b){
+        b.classList.toggle('active',b===btn);
+      });
+      document.querySelectorAll('.tab-pane').forEach(function(p){
+        p.classList.toggle('active',p.id==='tab-'+t);
+      });
+      if(t === 'skill'){
+        applyDefaultSkillBells();
+      }
+    };
+  });
+
+  function wireLiveKB(){
+    try {
+      var el = document.getElementById('inpBaseKB');
+      if(!el) return;
+      if(state && state.cfg && typeof state.cfg.baseKB !== 'undefined' && el.value.trim()===''){
+        el.value = String(state.cfg.baseKB || '').trim();
+      }
+      var handler = function(e){
+        state = state || {};
+        state.cfg = state.cfg || {};
+        state.cfg.baseKB = (e.target.value || '').trim();
+        save();
+        renderInfo();
+        renderSession();
+      };
+      el.oninput = handler;
+      el.onchange = handler;
+    } catch(e){}
+  }
+
+    document.getElementById('btnRebuild').onclick=function(){
+    if(confirm('Are you sure you want to apply settings and create a new block? This will replace all current sessions.')){
+      newBlock();
+    }
+  };
+  document.getElementById('btnReset').onclick=resetProgress;
+  document.getElementById('btnNextTop').onclick=function(){next();};
+  document.getElementById('btnPrevTop').onclick=function(){prev();};
+  document.getElementById('btnCompleteTop').onclick=function(){complete();};
+
+  document.getElementById('selPS').addEventListener('change',function(e){
+    var on=!!e.target.value;
+    document.getElementById('selPSVol').disabled=!on;
+    var adv=document.getElementById('chkPSAdvanced'); if(adv) adv.disabled=!on;
+  });
+
+  function loadBarbellFields(){
+    document.getElementById('barbellPush').value = barbellMap.Push || '';
+    document.getElementById('barbellPull').value = barbellMap.Pull || '';
+    document.getElementById('barbellSquat').value = barbellMap.Squat || '';
+    document.getElementById('barbellHinge').value = barbellMap.Hinge || '';
+  }
+  document.getElementById('btnSaveBarbell').onclick=function(){
+    barbellMap.Push = sanitizeName(document.getElementById('barbellPush').value);
+    barbellMap.Pull = sanitizeName(document.getElementById('barbellPull').value);
+    barbellMap.Squat = sanitizeName(document.getElementById('barbellSquat').value);
+    barbellMap.Hinge = sanitizeName(document.getElementById('barbellHinge').value);
+    saveBarbell();
+    toast('Barbell lifts saved');
+  };
+  loadBarbellFields();
+
+  function renderCustomForm(){
+    var wrap=document.getElementById('customForm'); wrap.innerHTML='';
+    sanitizeCustom();
+    for(var pidx=0;pidx<PATTERNS.length;pidx++){
+      var pat=PATTERNS[pidx]; var conf=customMatrix[pat]; var it=conf.items;
+      var card=document.createElement('div'); card.className='card';
+      var rows=['<div class="row" style="justify-content:space-between;align-items:center"><b>'+pat+'</b></div>'];
+      for(var i=0;i<4;i++){
+        var nm=esc(it[i].name||''); var bal=!!it[i].ballistic; var uni=!!it[i].unilateral;
+        rows.push('<div class="row-inline"><div style="flex:1"><label>'+ (i===0?'1 (Main)':' '+String(i+1)) +'</label><input type="text" data-p="'+pat+'" data-idx="'+String(i)+'" placeholder="'+(i===0?'e.g. Military Press':'... (accessory)')+'" value="'+nm+'"></div><label class="chk" style="margin-top:22px"><input type="checkbox" data-p="'+pat+'" data-idx="'+String(i)+'" data-bal '+(bal?'checked':'')+'> Ballistic (x2)</label><label class="chk" style="margin-top:22px"><input type="checkbox" data-p="'+pat+'" data-idx="'+String(i)+'" data-uni '+(uni?'checked':'')+'> Unilateral (+/+) </label></div>');
+      }
+      card.innerHTML=rows.join('');
+      wrap.appendChild(card);
+    }
+  }
+  function readCustomFromForm(){
+    var obj=loadJSON(CUSTOM_KEY,{})||{};
+    for(var pidx=0;pidx<PATTERNS.length;pidx++){var pat=PATTERNS[pidx]; obj[pat]=obj[pat]||{enabled:true,items:[{},{},{},{}]};}
+    document.querySelectorAll('input[data-idx][type="text"]').forEach(function(inp){
+      var p=inp.getAttribute('data-p'); var i=+inp.getAttribute('data-idx');
+      obj[p].items[i]=obj[p].items[i]||{};
+      obj[p].items[i].name = sanitizeName(inp.value);
+    });
+    document.querySelectorAll('input[data-bal]').forEach(function(chk){
+      var p=chk.getAttribute('data-p'); var i=+chk.getAttribute('data-idx');
+      obj[p].items[i]=obj[p].items[i]||{}; obj[p].items[i].ballistic=chk.checked;
+    });
+    document.querySelectorAll('input[data-uni]').forEach(function(chk){
+      var p=chk.getAttribute('data-p'); var i=+chk.getAttribute('data-idx');
+      obj[p].items[i]=obj[p].items[i]||{}; obj[p].items[i].unilateral=chk.checked;
+    });
+    return obj;
+  }
+
+  renderCustomForm();
+
+  document.getElementById('btnSaveCustom').onclick=function(){
+    customMatrix=readCustomFromForm(); saveJSON(CUSTOM_KEY,customMatrix);
+    document.querySelector('.tab-btn[data-tab="plan"]').click();
+    newBlock(); toast('Custom exercises saved');
+  };
+  document.getElementById('btnClearCustom').onclick=function(){
+    customMatrix={}; saveJSON(CUSTOM_KEY,customMatrix); renderCustomForm(); toast('Custom matrix cleared');
+  };
+
+  if(state&&state.plan){renderInfo();renderSession();}
+  wireLiveKB();
+  initSkillRepCounters();
+  initSkillTestLog();
+  initSnatchTimer();
+  updateSkillDot();
+})();
+</script>
+</body>
+</html>
