@@ -140,6 +140,7 @@
 
   <div class="tabs" role="tablist" aria-label="Navigation">
     <button class="tab-btn active" data-tab="plan" aria-selected="true">Planner</button>
+    <button class="tab-btn" data-tab="settings" aria-selected="false">Settings</button>
     <button class="tab-btn" data-tab="custom" aria-selected="false">Custom Exercises</button>
     <button class="tab-btn" data-tab="skill" aria-selected="false">
       Skill Test
@@ -158,17 +159,13 @@
       <h2>Current Session</h2>
       <div id="session" class="session" aria-live="polite">No block yet. Use Settings to apply settings & create a new block.</div>
     </div>
+  </div>
 
-    <details id="accSettings">
-      <summary>Settings</summary>
+
+  <div id="tab-settings" class="tab-pane">
+    <div class="card">
+      <h2>Settings</h2>
       <div class="panel">
-        <div class="grid cols-2">
-          <div>
-            <label>Block volume (Unity)</label>
-            <select id="selVol">
-              <option>180</option><option>240</option><option selected>300</option><option>400</option><option>500</option>
-            </select>
-          </div>
           <div>
             <label>Seed (optional)</label>
             <input id="inpSeed" placeholder="e.g. 12345">
@@ -210,6 +207,12 @@
           <div>
             <label class="row"><input type="checkbox" id="chkRunAuto" checked> Optional Run suggestions</label>
           </div>
+          <div>
+            <label class="row"><input type="checkbox" id="chkSafeRandom"> Safe random (limit extremes)</label>
+            <div class="muted">Limits extremes: max 1 Heavy-bias entry per day (when KB-bias is On) and max 2 Stress-patterns per week.</div>
+            <label class="row" style="margin-top:8px"><input type="checkbox" id="chkBalancedWeeks" disabled> Balanced weeks (2/2/2/2)</label>
+            <div class="muted">Requires Safe random. Forces each calendar week to include exactly 2× Deload, 2× Maintenance, 2× Development, 2× Stress across the 8 patterns.</div>
+          </div>
         </div>
 
         <div class="card" style="margin-top:12px">
@@ -228,11 +231,15 @@
           <button id="btnReset" class="btn ghost">Reset progress</button>
           <button id="btnResetCounters" class="btn ghost" title="Clear set counters of this session">Reset counters</button>
         </div>
+      
       </div>
-    </details>
+    </div>
+  </div>
+      </div>
+    </div>
   </div>
 
-  <div id="tab-custom" class="tab-pane">
+<div id="tab-custom" class="tab-pane">
     <div class="card">
       <h2>Custom Exercises</h2>
       <p class="muted">
@@ -991,20 +998,139 @@
     var matrix=effectiveMatrix();
     rnd=makeRNG(cfg.seed||'');
     var lastEnds=state.lastEnds||{};
-    var weekOrders={};
-    for(var p in matrix){
-      var order=['Deload','Maintenance','Development','Stress']; shuffle(order);
-      if(lastEnds[p]&&order[0]===lastEnds[p]){var tmp=order[0];order[0]=order[1];order[1]=tmp;}
-      weekOrders[p]=order;
+
+    function makeWeekOrdersOnce(){
+      var wo={};
+      for(var p in matrix){
+        var order=['Deload','Maintenance','Development','Stress']; shuffle(order);
+        if(lastEnds[p]&&order[0]===lastEnds[p]){var tmp=order[0];order[0]=order[1];order[1]=tmp;}
+        wo[p]=order;
+      }
+      return wo;
     }
+
+    function scoreWeekOrders(wo){
+      // lower is better; penalize stress stacking
+      var perWeek=[0,0,0,0];
+      for(var p in wo){
+        for(var w=0;w<4;w++){ if(wo[p][w]==='Stress') perWeek[w]++; }
+      }
+      var maxStress=Math.max.apply(null,perWeek);
+      var sum=perWeek.reduce(function(a,b){return a+b;},0);
+      return {perWeek:perWeek,maxStress:maxStress,sum:sum};
+    }
+
+    function makeWeekOrdersSafe(){
+      // Constraint: max 2 patterns in Stress in any given week index
+      var best=null;
+      for(var attempt=0; attempt<200; attempt++){
+        var wo=makeWeekOrdersOnce();
+        var sc=scoreWeekOrders(wo);
+        var ok=true;
+        for(var w=0;w<4;w++){ if(sc.perWeek[w]>2){ ok=false; break; } }
+        if(ok) return wo;
+        if(!best || sc.maxStress < best.sc.maxStress){ best={wo:wo,sc:sc}; }
+      }
+      return (best && best.wo) ? best.wo : makeWeekOrdersOnce();
+    }
+
+    function makeWeekOrdersBalanced(){
+      // Requires: each calendar week index has exactly 2x of each weekType across the 8 patterns
+      // AND each pattern still has exactly one of each type across 4 weeks.
+      var types=['Deload','Maintenance','Development','Stress'];
+      function distance(counts){
+        var dist=0;
+        for(var w=0; w<4; w++){
+          for(var t=0; t<4; t++){
+            dist += Math.abs((counts[w][t]|0) - 2);
+          }
+        }
+        return dist;
+      }
+      function countsFrom(wo){
+        var c=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];
+        for(var p in wo){
+          for(var w=0; w<4; w++){
+            var tt=wo[p][w];
+            var ti=types.indexOf(tt);
+            if(ti>=0) c[w][ti]++;
+          }
+        }
+        return c;
+      }
+
+      var best=null;
+      for(var attempt=0; attempt<4000; attempt++){
+        var wo=makeWeekOrdersOnce();
+        var c=countsFrom(wo);
+        var ok=true;
+        for(var w=0; w<4 && ok; w++){
+          for(var t=0; t<4; t++){
+            if((c[w][t]|0)!==2){ ok=false; break; }
+          }
+        }
+        if(ok) return wo;
+        var dist=distance(c);
+        if(!best || dist < best.dist){ best={wo:wo,dist:dist}; }
+      }
+      // Fall back to best-effort, then safe
+      return (best && best.wo) ? best.wo : makeWeekOrdersSafe();
+    }
+
+    var weekOrders = (cfg && cfg.safeRandom) ? ((cfg && cfg.balancedWeeks) ? makeWeekOrdersBalanced() : makeWeekOrdersSafe()) : makeWeekOrdersOnce();
     var weeks=[]; for(var w=0;w<4;w++){var days=[]; for(var dd=0;dd<5;dd++){days.push({entries:[],ps:null});} weeks.push({days:days});}
     var carrySeq = 0;
+
+    // Safe random: track Heavy-bias density per day
+    var safeRandom = !!(cfg && cfg.safeRandom);
+    var biasOn = !!(cfg && cfg.bias === 'on');
+    var heavyCount = [];
+    for(var ww=0; ww<4; ww++){ heavyCount[ww]=[0,0,0,0,0]; }
 
     for(var pat in matrix){
       for(var w2=0;w2<4;w2++){
         var wt=weekOrders[pat][w2];
         var items=buildWeekSplitsWithPcts(cfg.volume,wt);
-        var dayIdxs=pickDays(items.length);
+
+        // Safe random: ensure at most 1 Heavy-bias entry per day (across all patterns)
+        // Only applies when KB-bias is enabled, because Heavy/Light are otherwise irrelevant.
+        var dayIdxs = pickDays(items.length);
+        if(safeRandom && biasOn){
+          // Find the Heavy item for this pattern/week (usually exactly one)
+          var heavyIdx = -1;
+          for(var hi=0; hi<items.length; hi++){
+            var b = biasFromPct(wt, items[hi].pct);
+            if(b==='Heavy'){ heavyIdx = hi; break; }
+          }
+          if(heavyIdx>=0){
+            var tries=0;
+            while(tries<30){
+              var candidates = dayIdxs.filter(function(d){ return (heavyCount[w2][d]|0)===0; });
+              if(candidates.length) break;
+              dayIdxs = pickDays(items.length);
+              tries++;
+            }
+            var candidates2 = dayIdxs.filter(function(d){ return (heavyCount[w2][d]|0)===0; });
+            var heavyDay = candidates2.length ? candidates2[Math.floor(rnd()*candidates2.length)] : dayIdxs[0];
+
+            // Re-map so Heavy item lands on heavyDay
+            var pickedDays = dayIdxs.slice(0);
+            var pickedItems = items.slice(0);
+            var heavyItem = pickedItems.splice(heavyIdx,1)[0];
+            pickedDays = pickedDays.filter(function(x){ return x!==heavyDay; });
+
+            // Shuffle remaining days & items to keep randomness
+            shuffle(pickedDays);
+            shuffle(pickedItems);
+
+            // Rebuild parallel arrays in final order
+            items = [heavyItem].concat(pickedItems);
+            dayIdxs = [heavyDay].concat(pickedDays);
+
+            heavyCount[w2][heavyDay] = (heavyCount[w2][heavyDay]|0) + 1;
+          }
+        }
+
         for(var i2=0;i2<items.length;i2++){
           var d=dayIdxs[i2];
           var obj={
@@ -1478,7 +1604,9 @@ var finishedBlocks = (state.completedBlocks|0);
       psVolume:  on ? document.getElementById('selPSVol').value : null,
       psAdvanced:(document.getElementById('chkPSAdvanced') && !document.getElementById('chkPSAdvanced').disabled) ? document.getElementById('chkPSAdvanced').checked : false,
       baseKB:(document.getElementById('inpBaseKB') ? document.getElementById('inpBaseKB').value : '').trim(),
-      barbellMode: !!document.getElementById('chkBarbellMode').checked
+      barbellMode: !!document.getElementById('chkBarbellMode').checked,
+      safeRandom: !!(document.getElementById('chkSafeRandom') && document.getElementById('chkSafeRandom').checked),
+      balancedWeeks: !!(document.getElementById('chkBalancedWeeks') && document.getElementById('chkBalancedWeeks').checked)
     };
   }
 
@@ -1541,6 +1669,30 @@ var finishedBlocks = (state.completedBlocks|0);
       }
     };
   });
+
+  // Safe random sub-option UI
+  function syncBalancedWeeksUI(){
+    var s=document.getElementById('chkSafeRandom');
+    var b=document.getElementById('chkBalancedWeeks');
+    if(!b) return;
+    var on=!!(s && s.checked);
+    b.disabled = !on;
+    if(!on) b.checked = false;
+  }
+
+  document.addEventListener('change', function(ev){
+    if(ev && ev.target && ev.target.id==='chkSafeRandom'){
+      syncBalancedWeeksUI();
+    }
+  });
+
+  var goBtn = document.getElementById('btnGoSettings');
+  if(goBtn){
+    goBtn.addEventListener('click', function(){
+      var tbtn = document.querySelector('.tab-btn[data-tab="settings"]');
+      if(tbtn) tbtn.click();
+    });
+  }
 
   function wireLiveKB(){
     try {
@@ -1644,6 +1796,7 @@ var finishedBlocks = (state.completedBlocks|0);
   initSkillRepCounters();
   initSkillTestLog();
   initSnatchTimer();
+  syncBalancedWeeksUI();
   updateSkillDot();
 })();
 </script>
