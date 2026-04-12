@@ -8,6 +8,11 @@
   :root{color-scheme:dark}
   *{box-sizing:border-box}
   body{margin:0;background:#0b1220;color:#e6eaf2;font:16px/1.6 system-ui,Arial}
+  button,input,select{font:inherit}
+  button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{
+    outline:2px solid #7dd3fc;
+    outline-offset:2px;
+  }
   .app{max-width:980px;margin:0 auto;padding:16px 12px 84px}
   h1{margin:0 0 .6rem;font-size:28px}
   h2{margin:0;font-size:18px}
@@ -64,11 +69,7 @@
   ul{margin:6px 0 6px 18px;padding:0}
   ul li{margin:2px 0;font-size:13px}
 
-  .row.stack {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    gap: 8px !important;
-  }
+  .row.stack{display:flex}
 
   .nav-dot{
     position:absolute;
@@ -132,6 +133,10 @@
     background:#020617;
     border:1px solid rgba(255,255,255,.2);
   }
+  @media (prefers-reduced-motion:reduce){
+    *{scroll-behavior:auto}
+    .btn{transition:none}
+  }
 </style>
 </head>
 <body>
@@ -139,20 +144,20 @@
   <h1>Unity 2025</h1>
 
   <div class="tabs" role="tablist" aria-label="Navigation">
-    <button class="tab-btn active" data-tab="plan" aria-selected="true">Planner</button>
-    <button class="tab-btn" data-tab="settings" aria-selected="false">Settings</button>
-    <button class="tab-btn" data-tab="custom" aria-selected="false">Custom Exercises</button>
-    <button class="tab-btn" data-tab="skill" aria-selected="false">
+    <button type="button" id="tab-btn-plan" class="tab-btn active" data-tab="plan" role="tab" aria-selected="true" aria-controls="tab-plan" tabindex="0">Planner</button>
+    <button type="button" id="tab-btn-settings" class="tab-btn" data-tab="settings" role="tab" aria-selected="false" aria-controls="tab-settings" tabindex="-1">Settings</button>
+    <button type="button" id="tab-btn-custom" class="tab-btn" data-tab="custom" role="tab" aria-selected="false" aria-controls="tab-custom" tabindex="-1">Custom Exercises</button>
+    <button type="button" id="tab-btn-skill" class="tab-btn" data-tab="skill" role="tab" aria-selected="false" aria-controls="tab-skill" tabindex="-1">
       Skill Test
       <span id="skillDot" class="nav-dot" hidden></span>
     </button>
   </div>
 
-  <div id="tab-plan" class="tab-pane active">
+  <div id="tab-plan" class="tab-pane active" role="tabpanel" aria-labelledby="tab-btn-plan" tabindex="0">
     <div class="row stack" style="margin:8px 0 12px">
-      <button id="btnPrevTop" class="btn ghost" aria-label="Previous session">◀ Prev</button>
-      <button id="btnNextTop" class="btn" aria-label="Next session">Next ▶</button>
-      <button id="btnCompleteTop" class="btn inline" title="Mark this session as completed">Complete ✔</button>
+      <button type="button" id="btnPrevTop" class="btn ghost" aria-label="Previous session">&larr; Prev</button>
+      <button type="button" id="btnNextTop" class="btn" aria-label="Next session">Next &rarr;</button>
+      <button type="button" id="btnCompleteTop" class="btn inline" title="Mark this session as completed">Complete &#10003;</button>
     </div>
 
     <div class="card">
@@ -162,7 +167,7 @@
   </div>
 
 
-  <div id="tab-settings" class="tab-pane">
+  <div id="tab-settings" class="tab-pane" role="tabpanel" aria-labelledby="tab-btn-settings" tabindex="0" hidden>
     <div class="card">
       <h2>Settings</h2>
       <div class="panel">
@@ -180,14 +185,14 @@
           <div>
             <label>KB-bias (mains only; based on week split)</label>
             <select id="selBias">
-              <option value="on" selected>On (▲/▼)</option>
+              <option value="on" selected>On (&uarr;/&darr;)</option>
               <option value="off">Off</option>
             </select>
           </div>
           <div>
             <label>Strength Focus overlay (1 grind pattern)</label>
             <select id="selPS">
-              <option value="">— Off —</option>
+              <option value="">&mdash; Off &mdash;</option>
               <option>Push</option><option>Pull</option><option>Squat</option><option>Hinge</option>
             </select>
           </div>
@@ -218,7 +223,7 @@
             <label class="row"><input type="checkbox" id="chkSafeRandom"> Safe random (limit extremes)</label>
             <div class="muted">Limits extremes: max 1 Heavy-bias entry per day (when KB-bias is On) and max 2 Stress-patterns per week.</div>
             <label class="row" style="margin-top:8px"><input type="checkbox" id="chkBalancedWeeks" disabled> Balanced weeks (2/2/2/2)</label>
-            <div class="muted">Requires Safe random. Forces each calendar week to include exactly 2× Deload, 2× Maintenance, 2× Development, 2× Stress across the 8 patterns.</div>
+            <div class="muted">Requires Safe random. Forces each calendar week to include exactly 2&times; Deload, 2&times; Maintenance, 2&times; Development, 2&times; Stress across the 8 patterns.</div>
           </div>
         </div>
 
@@ -226,9 +231,9 @@
           <div id="kpi"></div>
           <div id="orders" class="muted" style="margin-top:6px"></div>
           <div class="muted" style="margin-top:6px">
-            Week percentages: Deload 15% • Maintenance 22% • Development 28% • Stress 35%.<br>
-            Splits per partition: 3 → [15,35,50]% • 4 → [15,22,28,35]% • 5 → [10,15,20,25,30]%.<br>
-            Bias (mains only): min%=Heavy ▲, max%=Light ▼. Light-bias main: cap-boost to 10 per round (no PS).<br>
+            Week percentages: Deload 15% &bull; Maintenance 22% &bull; Development 28% &bull; Stress 35%.<br>
+            Splits per partition: 3 &rarr; [15,35,50]% &bull; 4 &rarr; [15,22,28,35]% &bull; 5 &rarr; [10,15,20,25,30]%.<br>
+            Bias (mains only): min%=Heavy &uarr;, max%=Light &darr;. Light-bias main: cap-boost to 10 per round (no PS).<br>
             Barbell-mode: replaces Heavy-bias mains of Push/Pull/Squat/Hinge with your barbell variants.
           </div>
         </div>
@@ -242,14 +247,14 @@
       </div>
     </div>
   </div>
-<div id="tab-custom" class="tab-pane">
+<div id="tab-custom" class="tab-pane" role="tabpanel" aria-labelledby="tab-btn-custom" tabindex="0" hidden>
     <div class="card">
       <h2>Custom Exercises</h2>
       <p class="muted">
         This page assumes your <b>Base kettlebell</b> (in Settings) is your current Goldilocks bell.
         As a simple rule of thumb for Unity:
-        <br>• All <b>technique tests</b> (swing, clean, press, front squat, snatch 5/side, get-up) are done with your <b>Heavy Bias</b> bell (Base&nbsp;+&nbsp;4&nbsp;kg).
-        <br>• The <b>Snatch Volume Test</b> (100 reps &lt; 5:00) is done with your <b>Light Bias</b> bell (Base&nbsp;−&nbsp;4&nbsp;kg).
+        <br>â€¢ All <b>technique tests</b> (swing, clean, press, front squat, snatch 5/side, get-up) are done with your <b>Heavy Bias</b> bell (Base&nbsp;+&nbsp;4&nbsp;kg).
+        <br>â€¢ The <b>Snatch Volume Test</b> (100 reps &lt; 5:00) is done with your <b>Light Bias</b> bell (Base&nbsp;âˆ’&nbsp;4&nbsp;kg).
         <br>The bell fields below will auto-fill from your Base kettlebell if possible, but you can always override them.
       </p>
       <div id="customForm" class="grid cols-2" style="margin-top:8px"></div>
@@ -275,17 +280,17 @@
   </div>
 
   
-  <div id="tab-skill" class="tab-pane">
+  <div id="tab-skill" class="tab-pane" role="tabpanel" aria-labelledby="tab-btn-skill" tabindex="0" hidden>
     <div class="card">
       <h2>Skill Test Log</h2>
       <p class="muted">
         Test every 12 weeks or whenever you feel ready for a heavier bell.<br>
-        Pass the test → start the next block with that weight.<br>
-        Standard flow: <b>180 → 240 → 300 → Test → next bell.</b><br>
-        If all Heavy-bias reps were clean this block → increase volume next block.
+        Pass the test â†’ start the next block with that weight.<br>
+        Standard flow: <b>180 â†’ 240 â†’ 300 â†’ Test â†’ next bell.</b><br>
+        If all Heavy-bias reps were clean this block â†’ increase volume next block.
       </p>
 
-      <!-- 1) One-arm swing — 10 per side -->
+      <!-- 1) One-arm swing â€” 10 per side -->
       <div class="test-block" data-test="swing">
         <h3>One-arm Swing (10 per side)</h3>
         <div class="row">
@@ -296,7 +301,7 @@
           <div class="counter-group">
             <span class="label">Left reps</span>
             <div class="rep-counter" data-counter="test-swing-left">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -304,7 +309,7 @@
           <div class="counter-group">
             <span class="label">Right reps</span>
             <div class="rep-counter" data-counter="test-swing-right">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -318,7 +323,7 @@
         <p class="muted" id="test-swing-last"></p>
       </div>
 
-      <!-- 2) Double clean — 5 total -->
+      <!-- 2) Double clean â€” 5 total -->
       <div class="test-block" data-test="clean">
         <h3>Double Clean (5 total)</h3>
         <div class="row">
@@ -329,7 +334,7 @@
           <div class="counter-group">
             <span class="label">Total reps</span>
             <div class="rep-counter" data-counter="test-clean-reps">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -343,7 +348,7 @@
         <p class="muted" id="test-clean-last"></p>
       </div>
 
-      <!-- 3) Press — 5 per side -->
+      <!-- 3) Press â€” 5 per side -->
       <div class="test-block" data-test="press">
         <h3>Press (5 per side)</h3>
         <div class="row">
@@ -354,7 +359,7 @@
           <div class="counter-group">
             <span class="label">Left reps</span>
             <div class="rep-counter" data-counter="test-press-left">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -362,7 +367,7 @@
           <div class="counter-group">
             <span class="label">Right reps</span>
             <div class="rep-counter" data-counter="test-press-right">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -376,7 +381,7 @@
         <p class="muted" id="test-press-last"></p>
       </div>
 
-      <!-- 4) Double front squat — 5 total -->
+      <!-- 4) Double front squat â€” 5 total -->
       <div class="test-block" data-test="frontsquat">
         <h3>Double Front Squat (5 total)</h3>
         <div class="row">
@@ -387,7 +392,7 @@
           <div class="counter-group">
             <span class="label">Total reps</span>
             <div class="rep-counter" data-counter="test-frontsquat-reps">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -412,7 +417,7 @@
           <div class="counter-group">
             <span class="label">Left reps</span>
             <div class="rep-counter" data-counter="test-snatch5-left">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -420,7 +425,7 @@
           <div class="counter-group">
             <span class="label">Right reps</span>
             <div class="rep-counter" data-counter="test-snatch5-right">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -434,7 +439,7 @@
         <p class="muted" id="test-snatch5-last"></p>
       </div>
 
-      <!-- 6) Get-up — 1 per side -->
+      <!-- 6) Get-up â€” 1 per side -->
       <div class="test-block" data-test="getup">
         <h3>Get-up (1 per side)</h3>
         <div class="row">
@@ -445,7 +450,7 @@
           <div class="counter-group">
             <span class="label">Left reps</span>
             <div class="rep-counter" data-counter="test-getup-left">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -453,7 +458,7 @@
           <div class="counter-group">
             <span class="label">Right reps</span>
             <div class="rep-counter" data-counter="test-getup-right">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -478,7 +483,7 @@
           <div class="counter-group">
             <span class="label">Total reps</span>
             <div class="rep-counter" data-counter="test-snatch100-reps">
-              <button type="button" class="rep-btn">−</button>
+              <button type="button" class="rep-btn">âˆ’</button>
               <span class="rep-value">0</span>
               <button type="button" class="rep-btn">+</button>
             </div>
@@ -575,8 +580,7 @@
       box.addEventListener('click', function(ev){
         var btn = ev.target.closest('.rep-btn');
         if(!btn) return;
-        if(btn.textContent.trim()==='−' || btn.textContent.trim()==='-') update(-1);
-        else update(+1);
+        update(btn===box.querySelector('.rep-btn') ? -1 : +1);
       });
     });
   }
@@ -794,10 +798,46 @@
   };
 
   function $(s){return document.querySelector(s);}
-  function toast(m){var t=$('#toast');t.textContent=m;t.style.display='block';setTimeout(function(){t.style.display='none';},1500);}
+  var toastTimer=null;
+  function toast(m){
+    var t=$('#toast');
+    if(!t) return;
+    t.textContent=m;
+    t.style.display='block';
+    if(toastTimer){clearTimeout(toastTimer);}
+    toastTimer=setTimeout(function(){t.style.display='none';toastTimer=null;},1500);
+  }
   function esc(s){return String(s).replace(/[&<>"']/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]);});}
   function clean(s){return String(s).replace(/\s+/g,' ').trim();}
   function sanitizeName(s){var x=String(s||'').trim(); if(!x) return ''; if(x==='on'||x==='off') return ''; return x;}
+  function setHTML(id, html){
+    var el=document.getElementById(id);
+    if(el){
+      el.innerHTML=html;
+      normalizeMojibake(el);
+    }
+  }
+  function normalizeMojibake(root){
+    if(!root || !root.innerHTML) return;
+    var html=root.innerHTML;
+    var pairs=[
+      ['\u00e2\u20ac\u201d','&mdash;'],
+      ['\u00e2\u20ac\u00a2','&bull;'],
+      ['\u00e2\u2020\u2019','&rarr;'],
+      ['\u00e2\u2013\u00b2','&uarr;'],
+      ['\u00e2\u2013\u00bc','&darr;'],
+      ['\u00e2\u0153\u201d','&#10003;'],
+      ['\u00e2\u02c6\u2019','&minus;'],
+      ['\u00e2\u20ac\u201c','&ndash;'],
+      ['\u00c3\u2014','&times;'],
+      ['\u00e2\u20ac\u0153','&ldquo;'],
+      ['\u00e2\u20ac\u009d','&rdquo;']
+    ];
+    for(var i=0;i<pairs.length;i++){
+      html=html.split(pairs[i][0]).join(pairs[i][1]);
+    }
+    root.innerHTML=html;
+  }
 
   function makeRNG(seed){
     var h=2166136261>>>0;
@@ -839,7 +879,7 @@
     return 'Medium';
   }
   function biasBadge(b){
-    return b==='Heavy' ? ' <span class="badge">▲ +1</span>' : (b==='Light' ? ' <span class="badge">▼ −1</span>' : '');
+    return b==='Heavy' ? ' <span class="badge">â–² +1</span>' : (b==='Light' ? ' <span class="badge">â–¼ âˆ’1</span>' : '');
   }
   function takeRoundsLE(total, rounds){
     if (!Number.isFinite(total) || total <= 0) return 0;
@@ -864,7 +904,7 @@
   function dayKey(){if(!state.plan||!state.cursor)return'nokey';var c=state.cursor;return String((state.blockIdx||0))+'_'+String(c.w)+'_'+String(c.d);}
   function getCount(exKey){var k=dayKey();return (counters[k]&&counters[k][exKey])|0;}
   function setCount(exKey,val,max){var k=dayKey();counters[k]=counters[k]||{};counters[k][exKey]=Math.max(0,Math.min(max,val|0));countersSave();}
-  function mkCounterHTML(exKey,max){var cur=getCount(exKey);var safe=exKey.replace(/&/g,'&amp;').replace(/</g,'&lt;');return'<span class="counter" data-ex="'+safe+'" data-max="'+max+'"><button class="cbtn" data-dec>−</button><span class="cval">'+cur+'/'+max+'</span><button class="cbtn" data-inc>+</button></span>';}
+  function mkCounterHTML(exKey,max){var cur=getCount(exKey);var safe=exKey.replace(/&/g,'&amp;').replace(/</g,'&lt;');return'<span class="counter" data-ex="'+safe+'" data-max="'+max+'"><button class="cbtn" data-dec>âˆ’</button><span class="cval">'+cur+'/'+max+'</span><button class="cbtn" data-inc>+</button></span>';}
 
   var customMatrix=loadJSON(CUSTOM_KEY,{})||{};
   function inferBallistic(name){var nm=clean(name);return DEFAULT_BALLISTICS.has(nm)||/(swing|snatch|high pull|double clean)/i.test(nm)}
@@ -1256,7 +1296,7 @@
     }
 
     var html=[];
-    var doneMark = isDone(w,d) ? ' — ✔' : '';
+    var doneMark = isDone(w,d) ? ' â€” âœ”' : '';
     var baseKB = (state.cfg && state.cfg.baseKB) ? state.cfg.baseKB : '';
     var headerLine = 'Week '+String(w+1)+', Day '+String(d+1)+doneMark;
     var kbBadge = baseKB ? ' <span class="badge">KB ['+esc(baseKB)+']</span>' : '';
@@ -1273,21 +1313,21 @@
       else if (v <= 400) cutoff = 100;
       else cutoff = 125;
       if (totalReps < cutoff){
-        html.push('<div class="pill">Optional Run: 20–30 min @ MAF</div>');
+        html.push('<div class="pill">Optional Run: 20â€“30 min @ MAF</div>');
       }
     }
     html.push('<br><hr>');
-    html.push('<details class="acc-section"><summary>Warm-up</summary><div class="panel"><p class="muted">Optional 5–7 minute preparation before Unity.</p><h3>Sequence</h3><ul><li><b>Head nods</b> — 20 up/down, 20 side-to-side (ear to shoulder)</li><li><b>Cross crawls</b> — 20 total</li></ul><h3>Rocking</h3><ul><li>10× rocking with dorsiflexion (toes up)</li><li>10× rocking with plantarflexion (toes down)</li><li>5× rocking with one leg extended sideways</li></ul><h3>Segmental rolls</h3><ul><li>3× per arm</li><li>3× per leg</li></ul><h3>Crawling</h3><ul><li>2 minutes, easy pace, smooth breathing</li></ul></div></details>');
+    html.push('<details class="acc-section"><summary>Warm-up</summary><div class="panel"><p class="muted">Optional 5â€“7 minute preparation before Unity.</p><h3>Sequence</h3><ul><li><b>Head nods</b> â€” 20 up/down, 20 side-to-side (ear to shoulder)</li><li><b>Cross crawls</b> â€” 20 total</li></ul><h3>Rocking</h3><ul><li>10Ã— rocking with dorsiflexion (toes up)</li><li>10Ã— rocking with plantarflexion (toes down)</li><li>5Ã— rocking with one leg extended sideways</li></ul><h3>Segmental rolls</h3><ul><li>3Ã— per arm</li><li>3Ã— per leg</li></ul><h3>Crawling</h3><ul><li>2 minutes, easy pace, smooth breathing</li></ul></div></details>');
     html.push('<hr>');
     if(openerHTML){
       html.push(openerHTML);
     } else {
-      html.push('—');
+      html.push('â€”');
     }
     html.push('<hr>',esc(String(rc.rounds)+' rounds of the following circuit:'),'<br>');
     if(circuitExercises.length){
       html.push(circuitExercises.map(function(o){
-        return '<div class="line"><div class="txt">'+esc(o.repText)+' '+esc(o.name)+(o.label||'')+'</div>'+mkCounterHTML('Circuit — '+esc(o.name),rc.rounds)+'</div>';
+        return '<div class="line"><div class="txt">'+esc(o.repText)+' '+esc(o.name)+(o.label||'')+'</div>'+mkCounterHTML('Circuit â€” '+esc(o.name),rc.rounds)+'</div>';
       }).join(''));
     }else{
       html.push(esc('(No patterns in the circuit today)'));
@@ -1296,13 +1336,13 @@
     if (carryFinisher){
       html.push( esc('[ '+String(carryFinisher.seconds)+'s '+carryFinisher.name+' ]') );
     } else {
-      html.push( esc('[ — ]') );
+      html.push( esc('[ â€” ]') );
     }
     html.push('<hr>');
-    html.push('<details class="acc-section"><summary>Cooling Down</summary><div class="panel"><h3>Diaphragmatic Breathing — 2 minutes</h3><ul><li>Sit or lie comfortably.</li><li><b>Bottom hand:</b> on your lower belly.</li><li><b>Top hand:</b> on your sternum (breastbone).</li><li>Inhale slowly through the nose so that only the bottom hand moves.</li><li>The top hand should stay as still as possible.</li><li>Exhale gently through the nose or mouth while keeping the ribcage soft.</li><li>Maintain this pattern for about 2 minutes.</li></ul><h3>Trifecta Reset — 10–20 seconds each</h3><h4>L-Sit Hold (10–20 seconds)</h4><ul><li>Bent knees are fine.</li><li>Ribcage down, slight posterior pelvic tilt.</li><li>Think “light hollow”, not maximal tension.</li></ul><h4>Bridge Hold (10–20 seconds)</h4><ul><li>Lift your hips without forcing the lower back into hyperextension.</li><li>Focus on opening the front chain (hip flexors / abdomen).</li><li>Keep breathing softly.</li></ul><h4>Spinal Twist (10–20 seconds per side)</h4><ul><li>Low, gentle rotation.</li><li>Rotate only as far as you can feel the piriformis / glute / lower back engage and release.</li><li>Do not force the range.</li></ul><p class="muted">Recommended order: Diaphragmatic Breathing → L-Sit → Bridge → Twist.</p></div></details>');
+    html.push('<details class="acc-section"><summary>Cooling Down</summary><div class="panel"><h3>Diaphragmatic Breathing â€” 2 minutes</h3><ul><li>Sit or lie comfortably.</li><li><b>Bottom hand:</b> on your lower belly.</li><li><b>Top hand:</b> on your sternum (breastbone).</li><li>Inhale slowly through the nose so that only the bottom hand moves.</li><li>The top hand should stay as still as possible.</li><li>Exhale gently through the nose or mouth while keeping the ribcage soft.</li><li>Maintain this pattern for about 2 minutes.</li></ul><h3>Trifecta Reset â€” 10â€“20 seconds each</h3><h4>L-Sit Hold (10â€“20 seconds)</h4><ul><li>Bent knees are fine.</li><li>Ribcage down, slight posterior pelvic tilt.</li><li>Think â€œlight hollowâ€, not maximal tension.</li></ul><h4>Bridge Hold (10â€“20 seconds)</h4><ul><li>Lift your hips without forcing the lower back into hyperextension.</li><li>Focus on opening the front chain (hip flexors / abdomen).</li><li>Keep breathing softly.</li></ul><h4>Spinal Twist (10â€“20 seconds per side)</h4><ul><li>Low, gentle rotation.</li><li>Rotate only as far as you can feel the piriformis / glute / lower back engage and release.</li><li>Do not force the range.</li></ul><p class="muted">Recommended order: Diaphragmatic Breathing â†’ L-Sit â†’ Bridge â†’ Twist.</p></div></details>');
 var finishedBlocks = (state.completedBlocks|0);
     html.push('<br>', '<div class="muted">Finished blocks: '+String(finishedBlocks)+'</div>');
-    document.getElementById('session').innerHTML=html.join('');
+    setHTML('session', html.join(''));
 
     document.querySelectorAll('.counter').forEach(function($c){
       var ex=$c.getAttribute('data-ex'); var max=+$c.getAttribute('data-max');
@@ -1314,7 +1354,7 @@ var finishedBlocks = (state.completedBlocks|0);
   }
 
   function renderInfo(){
-    if(!state.plan){$('#kpi').innerHTML='';$('#orders').innerHTML='';return;}
+    if(!state.plan){setHTML('kpi','');setHTML('orders','');return;}
     var rc=state.plan.rc;
     var pills=[];
     pills.push('<span class="pill">Volume: '+String(state.cfg.volume)+'</span>');
@@ -1324,11 +1364,11 @@ var finishedBlocks = (state.completedBlocks|0);
     pills.push('<span class="pill">Block #'+String(state.blockIdx)+'</span>');
     pills.push('<span class="pill">KB base: '+(state.cfg.baseKB||'-')+'</span>');
     pills.push('<span class="pill">Finished blocks: '+String(state.completedBlocks|0)+'</span>');
-    pills.push('<span class="pill">KB bias: '+(state.cfg.bias==='on'?'On (▲/▼)':'Off')+'</span>');
-    if(state.cfg.psPattern){pills.push('<span class="pill">Strength Focus: '+state.cfg.psPattern+' • Vol: '+state.cfg.psVolume+' • '+(state.cfg.psAdvanced?'Advanced (H+SH)':'Basic')+'</span>');}
-    document.getElementById('kpi').innerHTML=pills.join(' ');
-    var rows=[]; for(var k in state.plan.weekOrders){rows.push(k+': <b>'+state.plan.weekOrders[k].join(' → ')+'</b>');}
-    document.getElementById('orders').innerHTML=rows.join('<br>');
+    pills.push('<span class="pill">KB bias: '+(state.cfg.bias==='on'?'On (â–²/â–¼)':'Off')+'</span>');
+    if(state.cfg.psPattern){pills.push('<span class="pill">Strength Focus: '+state.cfg.psPattern+' â€¢ Vol: '+state.cfg.psVolume+' â€¢ '+(state.cfg.psAdvanced?'Advanced (H+SH)':'Basic')+'</span>');}
+    setHTML('kpi', pills.join(' '));
+    var rows=[]; for(var k in state.plan.weekOrders){rows.push(k+': <b>'+state.plan.weekOrders[k].join(' â†’ ')+'</b>');}
+    setHTML('orders', rows.join('<br>'));
   }
 
   function firstNonEmpty(plan){
@@ -1367,12 +1407,12 @@ var finishedBlocks = (state.completedBlocks|0);
         var repsPerSide = 3;
         if (vol <= 180) repsPerSide = 1;
         else if (vol <= 240) repsPerSide = 2;
-        repStr = String(sets)+' × ('+String(repsPerSide)+'+'+String(repsPerSide)+') Get-Up Sit-Up'+badge;
-        counterLabel = 'Opener — Get-Up Sit-Up';
+        repStr = String(sets)+' Ã— ('+String(repsPerSide)+'+'+String(repsPerSide)+') Get-Up Sit-Up'+badge;
+        counterLabel = 'Opener â€” Get-Up Sit-Up';
       } else {
         var pair = isLight ? '2+2' : '1+1';
-        repStr = String(sets)+' × ('+pair+') Turkish Get Up'+badge;
-        counterLabel = 'Opener — Turkish Get Up';
+        repStr = String(sets)+' Ã— ('+pair+') Turkish Get Up'+badge;
+        counterLabel = 'Opener â€” Turkish Get Up';
       }
 
       openerHTML = '<div class="line"><div class="txt">'+repStr+'</div>'+mkCounterHTML(counterLabel,sets)+'</div>';
@@ -1395,10 +1435,10 @@ var finishedBlocks = (state.completedBlocks|0);
         for(var bi=0;bi<buckets.length;bi++){ perRound[bi] = apportion2(buckets[bi], Array(rounds).fill(1)); }
         for(var rr=0;rr<rounds;rr++){
           var parts=[]; for(var li=0; li<labels.length; li++){ if(perRound[li][rr]>0) parts.push(labels[li]+String(perRound[li][rr])); }
-          roundLabels.push(parts.length?parts.join('/'):'—');
+          roundLabels.push(parts.length?parts.join('/'):'â€”');
         }
-        var detail=roundLabels.map(function(s,i){return 'R'+String(i+1)+':'+s;}).join(' • ');
-        circuitExercises.push({name:'PS — '+info.mainName,repText:String(rounds)+' rounds',label:' — '+info.level+(info.sh?' (H+SH)':'')+' — '+detail});
+        var detail=roundLabels.map(function(s,i){return 'R'+String(i+1)+':'+s;}).join(' â€¢ ');
+        circuitExercises.push({name:'PS â€” '+info.mainName,repText:String(rounds)+' rounds',label:' â€” '+info.level+(info.sh?' (H+SH)':'')+' â€” '+detail});
       }
     }
 
@@ -1593,9 +1633,20 @@ var finishedBlocks = (state.completedBlocks|0);
     localStorage.removeItem(LS_KEY); state={};
     localStorage.removeItem(BLOCKS_KEY);
     localStorage.removeItem(LAST_TEST_BLOCK_KEY);
-    document.getElementById('session').textContent='Progress cleared. Click “New Block”.';
-    document.getElementById('kpi').innerHTML=''; document.getElementById('orders').innerHTML=''; toast('Progress reset');
+    document.getElementById('session').textContent='Progress cleared. Click "New Block".';
+    setHTML('kpi',''); setHTML('orders',''); toast('Progress reset');
     updateSkillDot();
+  }
+  function resetCurrentCounters(){
+    var k=dayKey();
+    if(k==='nokey'){
+      toast('No active session to reset');
+      return;
+    }
+    delete counters[k];
+    countersSave();
+    renderSession();
+    toast('Session counters reset');
   }
   function readCfg(){
     var psPatSel=(document.getElementById('selPS').value||''); var on=!!psPatSel;
@@ -1638,7 +1689,7 @@ var finishedBlocks = (state.completedBlocks|0);
         }
       }
 
-      // Technique tests → Heavy Bias bell
+      // Technique tests â†’ Heavy Bias bell
       [
         'test-swing-bell',
         'test-clean-bell',
@@ -1650,7 +1701,7 @@ var finishedBlocks = (state.completedBlocks|0);
         setIfEmpty(id, heavy);
       });
 
-      // Snatch volume test → Light Bias bell
+      // Snatch volume test â†’ Light Bias bell
       if(light < 4){ light = base; } // safety: if Base is already very light
       setIfEmpty('test-snatch100-bell', light);
     }catch(e){
@@ -1658,19 +1709,41 @@ var finishedBlocks = (state.completedBlocks|0);
     }
   }
 
+  function setActiveTab(tabName){
+    document.querySelectorAll('.tab-btn').forEach(function(btn){
+      var isActive=btn.getAttribute('data-tab')===tabName;
+      btn.classList.toggle('active',isActive);
+      btn.setAttribute('aria-selected',isActive?'true':'false');
+      btn.tabIndex=isActive?0:-1;
+    });
+    document.querySelectorAll('.tab-pane').forEach(function(panel){
+      var isActive=panel.id==='tab-'+tabName;
+      panel.classList.toggle('active',isActive);
+      panel.hidden=!isActive;
+    });
+    if(tabName==='skill'){
+      applyDefaultSkillBells();
+    }
+  }
+
   document.querySelectorAll('.tab-btn').forEach(function(btn){
     btn.onclick=function(){
-      var t=btn.getAttribute('data-tab');
-      document.querySelectorAll('.tab-btn').forEach(function(b){
-        b.classList.toggle('active',b===btn);
-      });
-      document.querySelectorAll('.tab-pane').forEach(function(p){
-        p.classList.toggle('active',p.id==='tab-'+t);
-      });
-      if(t === 'skill'){
-        applyDefaultSkillBells();
-      }
+      setActiveTab(btn.getAttribute('data-tab'));
     };
+    btn.addEventListener('keydown', function(ev){
+      if(ev.key!=='ArrowRight' && ev.key!=='ArrowLeft' && ev.key!=='Home' && ev.key!=='End') return;
+      ev.preventDefault();
+      var tabs=Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
+      var idx=tabs.indexOf(btn);
+      if(idx<0) return;
+      var nextIdx=idx;
+      if(ev.key==='ArrowRight') nextIdx=(idx+1)%tabs.length;
+      if(ev.key==='ArrowLeft') nextIdx=(idx-1+tabs.length)%tabs.length;
+      if(ev.key==='Home') nextIdx=0;
+      if(ev.key==='End') nextIdx=tabs.length-1;
+      tabs[nextIdx].focus();
+      setActiveTab(tabs[nextIdx].getAttribute('data-tab'));
+    });
   });
 
   // Safe random sub-option UI
@@ -1717,12 +1790,61 @@ var finishedBlocks = (state.completedBlocks|0);
     } catch(e){}
   }
 
+  function normalizeStaticText(){
+    var prevBtn=document.getElementById('btnPrevTop');
+    var nextBtn=document.getElementById('btnNextTop');
+    var completeBtn=document.getElementById('btnCompleteTop');
+    if(prevBtn){prevBtn.type='button';prevBtn.innerHTML='&larr; Prev';}
+    if(nextBtn){nextBtn.type='button';nextBtn.innerHTML='Next &rarr;';}
+    if(completeBtn){completeBtn.type='button';completeBtn.innerHTML='Complete &#10003;';}
+
+    var biasOpt=document.querySelector('#selBias option[value="on"]');
+    var psOffOpt=document.querySelector('#selPS option[value=""]');
+    if(biasOpt){biasOpt.innerHTML='On (&uarr;/&darr;)';}
+    if(psOffOpt){psOffOpt.innerHTML='&mdash; Off &mdash;';}
+
+    document.querySelectorAll('.rep-counter').forEach(function(box){
+      var buttons=box.querySelectorAll('.rep-btn');
+      if(buttons[0]){buttons[0].innerHTML='&minus;';}
+      if(buttons[1]){buttons[1].textContent='+';}
+    });
+
+    var staticReplacements=[
+      {
+        find:'Requires Safe random.',
+        html:'Requires Safe random. Forces each calendar week to include exactly 2&times; Deload, 2&times; Maintenance, 2&times; Development, 2&times; Stress across the 8 patterns.'
+      },
+      {
+        find:'Week percentages:',
+        html:'Week percentages: Deload 15% &bull; Maintenance 22% &bull; Development 28% &bull; Stress 35%.<br>`r`n            Splits per partition: 3 &rarr; [15,35,50]% &bull; 4 &rarr; [15,22,28,35]% &bull; 5 &rarr; [10,15,20,25,30]%.<br>`r`n            Bias (mains only): min%=Heavy &uarr;, max%=Light &darr;. Light-bias main: cap-boost to 10 per round (no PS).<br>`r`n            Barbell-mode: replaces Heavy-bias mains of Push/Pull/Squat/Hinge with your barbell variants.'
+      },
+      {
+        find:'This page assumes your',
+        html:'This page assumes your <b>Base kettlebell</b> (in Settings) is your current Goldilocks bell.<br>As a simple rule of thumb for Unity:<br>&bull; All <b>technique tests</b> (swing, clean, press, front squat, snatch 5/side, get-up) are done with your <b>Heavy Bias</b> bell (Base&nbsp;+&nbsp;4&nbsp;kg).<br>&bull; The <b>Snatch Volume Test</b> (100 reps &lt; 5:00) is done with your <b>Light Bias</b> bell (Base&nbsp;&minus;&nbsp;4&nbsp;kg).<br>The bell fields below will auto-fill from your Base kettlebell if possible, but you can always override them.'
+      },
+      {
+        find:'Test every 12 weeks',
+        html:'Test every 12 weeks or whenever you feel ready for a heavier bell.<br>Pass the test &rarr; start the next block with that weight.<br>Standard flow: <b>180 &rarr; 240 &rarr; 300 &rarr; Test &rarr; next bell.</b><br>If all Heavy-bias reps were clean this block &rarr; increase volume next block.'
+      }
+    ];
+
+    document.querySelectorAll('.muted').forEach(function(el){
+      for(var i=0;i<staticReplacements.length;i++){
+        if(el.textContent.indexOf(staticReplacements[i].find)!==-1){
+          el.innerHTML=staticReplacements[i].html;
+          break;
+        }
+      }
+    });
+  }
+
     document.getElementById('btnRebuild').onclick=function(){
     if(confirm('Are you sure you want to apply settings and create a new block? This will replace all current sessions.')){
       newBlock();
     }
   };
   document.getElementById('btnReset').onclick=resetProgress;
+  document.getElementById('btnResetCounters').onclick=resetCurrentCounters;
   document.getElementById('btnNextTop').onclick=function(){next();};
   document.getElementById('btnPrevTop').onclick=function(){prev();};
   document.getElementById('btnCompleteTop').onclick=function(){complete();};
@@ -1794,6 +1916,8 @@ var finishedBlocks = (state.completedBlocks|0);
     customMatrix={}; saveJSON(CUSTOM_KEY,customMatrix); renderCustomForm(); toast('Custom matrix cleared');
   };
 
+  normalizeStaticText();
+  setActiveTab('plan');
   if(state&&state.plan){renderInfo();renderSession();}
   wireLiveKB();
   initSkillRepCounters();
@@ -1805,5 +1929,3 @@ var finishedBlocks = (state.completedBlocks|0);
 </script>
 </body>
 </html>
-
-
