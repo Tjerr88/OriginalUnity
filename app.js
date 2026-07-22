@@ -156,7 +156,10 @@
     let assigned = standard;
     if (settings.bias && entry.intensity === 'Heavy') assigned = Math.min(entry.volume, rc.heavy * rc.rounds);
     if (settings.bias && entry.intensity === 'Light') assigned = Math.min(entry.volume, standard * 2);
-    if (/turkish get up/i.test(main)) assigned = Math.min(entry.volume, rc.rounds);
+    if (/turkish get up/i.test(main)) {
+      const getUpsPerSide = entry.intensity === 'Light' ? 2 : 1;
+      assigned = Math.min(entry.volume, rc.rounds * getUpsPerSide);
+    }
     const weight = isBarbell ? 'Barbell' : entry.intensity === 'Heavy' ? settings.baseKB + 4 : entry.intensity === 'Light' ? Math.max(4, settings.baseKB - 4) : settings.baseKB;
     const exercises = [];
     if (assigned > 0) exercises.push({ id: `${idBase}-m`, name: main, detail: `${displayReps(main, Math.max(1, Math.floor(assigned / rc.rounds)))} reps`, rounds: rc.rounds, intensity: entry.intensity, weight });
