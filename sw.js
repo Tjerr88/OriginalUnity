@@ -1,4 +1,4 @@
-const CACHE = 'unity-v2';
+const CACHE = 'unity-v4';
 const ASSETS = [
   './','./index.html','./styles.css','./app.js','./manifest.webmanifest',
   './icon-192.png','./icon-512.png','./unity-logo.png',

@@ -18,7 +18,7 @@
     'Loaded Carry': { main: 'Suitcase Carry', acc: ['Front Rack Carry', 'Overhead Carry', 'Bear Crawl'] }
   };
   const BALLISTIC = /swing|snatch|double clean|push press/i;
-  const UNILATERAL = /one-arm|single-leg|split|pistol|step-up|lunge|windmill|bent press|half-kneeling|renegade|pull-up|chin-up|military press|push press|snatch/i;
+  const UNILATERAL = /one-arm|single-leg|split|pistol|step-up|lunge|windmill|bent press|half-kneeling|renegade|pull-up|chin-up|military press|push press|snatch|turkish get up/i;
   const DEFAULTS = {
     baseKB: 20, volume: 180, autoProgression: true, bias: true, weekMode: 'balanced',
     strengthFocus: '', strengthReps: 180, barbellMode: false,
@@ -292,19 +292,24 @@
     $('#prevDay').disabled = state.cursor === 0;
     $('#nextDay').disabled = state.cursor === state.plan.days.length - 1;
     const counts = day.exercises.reduce((out, e) => { out[e.intensity] = (out[e.intensity] || 0) + 1; return out; }, {});
-    const meta = [`${state.settings.volume} block`, `${state.plan.rounds} rounds`, ...Object.keys(counts).filter(k => k !== 'Base').map(k => k)];
+    const metaLabel = intensity => intensity === 'Heavy' ? '▲ Heavy' : intensity === 'Light' ? '▼ Light' : intensity;
+    const meta = [`${state.settings.volume} block`, `${state.plan.rounds} rounds`, ...Object.keys(counts).filter(k => k !== 'Base').map(metaLabel)];
     $('#sessionMeta').innerHTML = meta.map(m => `<span class="meta-pill ${m.toLowerCase()}">${esc(m)}</span>`).join('');
     const carry = day.exercises.find(e => e.carry);
     const getUps = day.exercises.filter(e => !e.carry && /turkish get up/i.test(e.name));
     const regular = day.exercises.filter(e => !e.carry && !/turkish get up/i.test(e.name));
     $('#getUpBlock').hidden = !getUps.length;
-    $('#getUpTitle').textContent = `${state.plan.rounds} rounds of Get Up`;
-    $('#getUpList').innerHTML = getUps.map(exerciseHTML).join('');
+    $('#getUpTitle').textContent = 'Turkish Get Up';
+    $('#getUpList').innerHTML = getUps.map(getUpHTML).join('');
     $('#circuitBlock').hidden = !regular.length;
-    $('#circuitTitle').textContent = `${state.plan.rounds} rounds of the following circuit`;
+    $('#circuitTitle').textContent = `${state.plan.rounds} rounds`;
     $('#exerciseList').innerHTML = regular.map(exerciseHTML).join('');
     $('#carryBlock').hidden = !carry;
     if (carry) renderCarry(carry);
+    let blockNumber = 1;
+    if (getUps.length) $('#getUpIndex').textContent = String(blockNumber++).padStart(2, '0');
+    if (regular.length) $('#circuitIndex').textContent = String(blockNumber++).padStart(2, '0');
+    if (carry) $('#carryIndex').textContent = String(blockNumber++).padStart(2, '0');
     const button = $('#completeSession');
     button.textContent = state.completed[state.cursor] ? 'Completed ✓' : 'Complete session';
     button.classList.toggle('done', !!state.completed[state.cursor]);
@@ -318,8 +323,8 @@
   }
   function renderCarry(carry) {
     if (carryTimer.day !== state.cursor) resetCarryTimer(carry, false);
-    const labels = { ready: 'Klaar om te starten', left: 'Linkerarm', switch: 'Wissel van arm', right: 'Rechterarm', done: 'Carry voltooid' };
-    $('#carryLine').innerHTML = `<div class="carry-details"><b>${esc(carry.name)}</b><span>${esc(carry.detail)} per arm · ${carry.weight} kg</span></div><div class="carry-timer"><span class="carry-time">${carryTimerText(carryTimer.remaining)}</span><span class="carry-phase">${labels[carryTimer.phase]}</span><div class="carry-controls"><button type="button" id="carryToggle">${carryTimer.handle ? 'Pauze' : carryTimer.phase === 'done' ? 'Opnieuw' : carryTimer.phase === 'ready' ? 'Start timer' : 'Verder'}</button><button type="button" id="carryReset">Reset</button></div></div>`;
+    const labels = { ready: 'Ready to start', left: 'Left arm', switch: 'Switch arms', right: 'Right arm', done: 'Carry complete' };
+    $('#carryLine').innerHTML = `<div class="carry-details"><b>${esc(carry.name)}</b><span>${esc(carry.detail)} per arm · ${weightHTML(carry)}</span></div><div class="carry-timer"><span class="carry-time">${carryTimerText(carryTimer.remaining)}</span><span class="carry-phase">${labels[carryTimer.phase]}</span><div class="carry-controls"><button type="button" id="carryToggle">${carryTimer.handle ? 'Pause' : carryTimer.phase === 'done' ? 'Again' : carryTimer.phase === 'ready' ? 'Start timer' : 'Resume'}</button><button type="button" id="carryReset">Reset</button></div></div>`;
     $('#carryToggle').addEventListener('click', () => toggleCarryTimer(carry));
     $('#carryReset').addEventListener('click', () => resetCarryTimer(carry));
   }
@@ -352,8 +357,20 @@
   }
   function exerciseHTML(exercise) {
     const current = state.counters[exercise.id] || 0;
-    const label = exercise.weight === 'Barbell' ? 'Barbell' : `${exercise.weight} kg`;
-    return `<div class="exercise-row ${current >= exercise.rounds ? 'done' : ''}"><div><h3>${esc(exercise.name)}</h3><p>${esc(exercise.detail)} · ${esc(label)}${exercise.intensity !== 'Base' ? ` · ${esc(exercise.intensity)}` : ''}</p></div><div class="rep-counter" data-id="${esc(exercise.id)}" data-max="${exercise.rounds}"><button type="button" data-delta="-1">−</button><span>${current}/${exercise.rounds}</span><button type="button" data-delta="1">+</button></div></div>`;
+    return `<div class="exercise-row ${current >= exercise.rounds ? 'done' : ''}"><div><h3>${esc(exercise.name)}</h3><p>${esc(exercise.detail)} · ${weightHTML(exercise)}</p></div>${counterHTML(exercise, current)}</div>`;
+  }
+  function getUpHTML(exercise) {
+    const current = state.counters[exercise.id] || 0;
+    const reps = exercise.detail.replace(/\s*reps?$/i, '');
+    return `<div class="exercise-row ${current >= exercise.rounds ? 'done' : ''}"><div><h3>${exercise.rounds} × ${esc(reps)}</h3><p>${weightHTML(exercise)}</p></div>${counterHTML(exercise, current)}</div>`;
+  }
+  function weightHTML(exercise) {
+    if (exercise.weight === 'Barbell') return 'Barbell';
+    const marker = exercise.intensity === 'Heavy' ? '<span class="intensity-marker heavy" aria-label="Heavier bell">▲</span> ' : exercise.intensity === 'Light' ? '<span class="intensity-marker light" aria-label="Lighter bell">▼</span> ' : '';
+    return `${marker}${exercise.weight} kg`;
+  }
+  function counterHTML(exercise, current) {
+    return `<div class="rep-counter" data-id="${esc(exercise.id)}" data-max="${exercise.rounds}"><button type="button" data-delta="-1" aria-label="Remove round">−</button><span>${current}/${exercise.rounds}</span><button type="button" data-delta="1" aria-label="Add round">+</button></div>`;
   }
   function changeCounter(event) {
     const box = event.currentTarget.closest('.rep-counter');
