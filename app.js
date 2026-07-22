@@ -8,7 +8,7 @@
   const SPLITS = { Deload: [.15, .35, .5], Maintenance: [.15, .22, .28, .35], Development: [.15, .22, .28, .35], Stress: [.1, .15, .2, .25, .3] };
   const PATTERNS = ['Push', 'Pull', 'Squat', 'Lunge', 'Hinge', 'Rotation', 'Anti-Rotation', 'Loaded Carry'];
   const LIBRARY = {
-    Push: { main: 'Military Press', acc: ['Double Push Press', 'Half-Kneeling Press', 'Bridge Floor Press'] },
+    Push: { main: 'Military Press', acc: ['Double Push Press', 'Half-Kneeling Press', 'Double Bridge Floor Press'] },
     Pull: { main: 'Double Clean', acc: ['Pull-up / Chin-up', 'Wide Row', 'Small Row'] },
     Squat: { main: 'Double Front Squat', acc: ['Box Pistol', 'Step-up', 'Goblet Squat'] },
     Lunge: { main: 'Double Reverse Lunge', acc: ['Tactical Lunge', 'Bulgarian Split Squat', 'Clean + Reverse Lunge'] },
@@ -156,6 +156,7 @@
     let assigned = standard;
     if (settings.bias && entry.intensity === 'Heavy') assigned = Math.min(entry.volume, rc.heavy * rc.rounds);
     if (settings.bias && entry.intensity === 'Light') assigned = Math.min(entry.volume, standard * 2);
+    if (/turkish get up/i.test(main)) assigned = Math.min(entry.volume, rc.rounds);
     const weight = isBarbell ? 'Barbell' : entry.intensity === 'Heavy' ? settings.baseKB + 4 : entry.intensity === 'Light' ? Math.max(4, settings.baseKB - 4) : settings.baseKB;
     const exercises = [];
     if (assigned > 0) exercises.push({ id: `${idBase}-m`, name: main, detail: `${displayReps(main, Math.max(1, Math.floor(assigned / rc.rounds)))} reps`, rounds: rc.rounds, intensity: entry.intensity, weight });
@@ -357,7 +358,8 @@
   }
   function exerciseHTML(exercise) {
     const current = state.counters[exercise.id] || 0;
-    return `<div class="exercise-row ${current >= exercise.rounds ? 'done' : ''}"><div><h3>${esc(exercise.name)}</h3><p>${esc(exercise.detail)} · ${weightHTML(exercise)}</p></div>${counterHTML(exercise, current)}</div>`;
+    const name = exercise.name === 'Bridge Floor Press' ? 'Double Bridge Floor Press' : exercise.name;
+    return `<div class="exercise-row ${current >= exercise.rounds ? 'done' : ''}"><div><h3>${esc(name)}</h3><p>${esc(exercise.detail)} · ${weightHTML(exercise)}</p></div>${counterHTML(exercise, current)}</div>`;
   }
   function getUpHTML(exercise) {
     const current = state.counters[exercise.id] || 0;
