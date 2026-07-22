@@ -46,6 +46,7 @@
   let installPrompt = null;
   let timerSeconds = 0;
   let timerHandle = null;
+  let carryTimer = { day: -1, phase: 'ready', remaining: 0, handle: null };
 
   function loadState() {
     try {
@@ -294,14 +295,60 @@
     const meta = [`${state.settings.volume} block`, `${state.plan.rounds} rounds`, ...Object.keys(counts).filter(k => k !== 'Base').map(k => k)];
     $('#sessionMeta').innerHTML = meta.map(m => `<span class="meta-pill ${m.toLowerCase()}">${esc(m)}</span>`).join('');
     const carry = day.exercises.find(e => e.carry);
-    const regular = day.exercises.filter(e => !e.carry);
-    $('#exerciseList').innerHTML = regular.map(exerciseHTML).join('') || '<div class="exercise-row"><div><h3>Recovery day</h3></div></div>';
-    $('#carryLine').hidden = !carry;
-    if (carry) $('#carryLine').innerHTML = `<b>${esc(carry.name)}</b> · ${esc(carry.detail)} · ${carry.weight} kg`;
+    const getUps = day.exercises.filter(e => !e.carry && /turkish get up/i.test(e.name));
+    const regular = day.exercises.filter(e => !e.carry && !/turkish get up/i.test(e.name));
+    $('#getUpBlock').hidden = !getUps.length;
+    $('#getUpTitle').textContent = `${state.plan.rounds} rounds of Get Up`;
+    $('#getUpList').innerHTML = getUps.map(exerciseHTML).join('');
+    $('#circuitBlock').hidden = !regular.length;
+    $('#circuitTitle').textContent = `${state.plan.rounds} rounds of the following circuit`;
+    $('#exerciseList').innerHTML = regular.map(exerciseHTML).join('');
+    $('#carryBlock').hidden = !carry;
+    if (carry) renderCarry(carry);
     const button = $('#completeSession');
     button.textContent = state.completed[state.cursor] ? 'Completed ✓' : 'Complete session';
     button.classList.toggle('done', !!state.completed[state.cursor]);
     $$('.rep-counter button').forEach(button => button.addEventListener('click', changeCounter));
+  }
+  function carryDuration(carry) {
+    return Math.max(1, parseInt(carry.detail, 10) || 30);
+  }
+  function carryTimerText(seconds) {
+    return `${String(Math.floor(seconds / 60)).padStart(2,'0')}:${String(seconds % 60).padStart(2,'0')}`;
+  }
+  function renderCarry(carry) {
+    if (carryTimer.day !== state.cursor) resetCarryTimer(carry, false);
+    const labels = { ready: 'Klaar om te starten', left: 'Linkerarm', switch: 'Wissel van arm', right: 'Rechterarm', done: 'Carry voltooid' };
+    $('#carryLine').innerHTML = `<div class="carry-details"><b>${esc(carry.name)}</b><span>${esc(carry.detail)} per arm · ${carry.weight} kg</span></div><div class="carry-timer"><span class="carry-time">${carryTimerText(carryTimer.remaining)}</span><span class="carry-phase">${labels[carryTimer.phase]}</span><div class="carry-controls"><button type="button" id="carryToggle">${carryTimer.handle ? 'Pauze' : carryTimer.phase === 'done' ? 'Opnieuw' : carryTimer.phase === 'ready' ? 'Start timer' : 'Verder'}</button><button type="button" id="carryReset">Reset</button></div></div>`;
+    $('#carryToggle').addEventListener('click', () => toggleCarryTimer(carry));
+    $('#carryReset').addEventListener('click', () => resetCarryTimer(carry));
+  }
+  function toggleCarryTimer(carry) {
+    if (carryTimer.handle) {
+      clearInterval(carryTimer.handle);
+      carryTimer.handle = null;
+      renderCarry(carry);
+      return;
+    }
+    if (carryTimer.phase === 'ready' || carryTimer.phase === 'done') {
+      carryTimer.phase = 'left';
+      carryTimer.remaining = carryDuration(carry);
+    }
+    carryTimer.handle = setInterval(() => {
+      carryTimer.remaining--;
+      if (carryTimer.remaining <= 0) {
+        if (carryTimer.phase === 'left') { carryTimer.phase = 'switch'; carryTimer.remaining = 5; }
+        else if (carryTimer.phase === 'switch') { carryTimer.phase = 'right'; carryTimer.remaining = carryDuration(carry); }
+        else { clearInterval(carryTimer.handle); carryTimer.handle = null; carryTimer.phase = 'done'; carryTimer.remaining = 0; }
+      }
+      renderCarry(carry);
+    }, 1000);
+    renderCarry(carry);
+  }
+  function resetCarryTimer(carry, rerender = true) {
+    clearInterval(carryTimer.handle);
+    carryTimer = { day: state.cursor, phase: 'ready', remaining: carryDuration(carry), handle: null };
+    if (rerender) renderCarry(carry);
   }
   function exerciseHTML(exercise) {
     const current = state.counters[exercise.id] || 0;

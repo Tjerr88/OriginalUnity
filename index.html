@@ -63,9 +63,10 @@
             <fieldset class="setup-step" data-step="1">
               <legend class="sr-only">Training structure</legend>
               <span class="field-label">KB Bias</span>
+              <p class="field-help">Verschuif bewust rond je vertrouwde Goldilocks bell: train soms lichter voor snelheid en techniek, en wen geleidelijk aan een zwaardere bell.</p>
               <div class="choice-grid two">
-                <label class="choice"><input type="radio" name="bias" value="on" checked><span><b>On</b><small>Light, base and heavy</small></span></label>
-                <label class="choice"><input type="radio" name="bias" value="off"><span><b>Off</b><small>Goldilocks bell only</small></span></label>
+                <label class="choice"><input type="radio" name="bias" value="on" checked><span><b>On</b><small>Wisselt tussen lichter, vertrouwd en zwaarder</small></span></label>
+                <label class="choice"><input type="radio" name="bias" value="off"><span><b>Off</b><small>Altijd je vertrouwde Goldilocks bell</small></span></label>
               </div>
               <span class="field-label">Week structure</span>
               <div class="choice-grid two">
@@ -119,11 +120,19 @@
         <div class="day-nav"><button id="prevDay" aria-label="Previous day">←</button><button id="nextDay" aria-label="Next day">→</button></div>
       </div>
       <div class="session-meta" id="sessionMeta"></div>
-      <div class="workout-card glass">
-        <div id="exerciseList" class="exercise-list"></div>
-        <div id="carryLine" class="carry-line" hidden></div>
-      </div>
       <details class="routine glass"><summary>Warm-up</summary><p>Rocking · Crawling · Segmental rolls · 5–7 min</p></details>
+      <div id="getUpBlock" class="session-block glass" hidden>
+        <div class="block-heading"><span class="block-index">01</span><div><p>LOS ONDERDEEL</p><h2 id="getUpTitle">3 rounds of Get Up</h2></div></div>
+        <div id="getUpList" class="exercise-list"></div>
+      </div>
+      <div id="circuitBlock" class="session-block glass" hidden>
+        <div class="block-heading"><span class="block-index">02</span><div><p>HOOFDCIRCUIT</p><h2 id="circuitTitle">3 rounds of the following circuit</h2></div></div>
+        <div id="exerciseList" class="exercise-list"></div>
+      </div>
+      <div id="carryBlock" class="session-block carry-block glass" hidden>
+        <div class="block-heading"><span class="block-index">03</span><div><p>AFSLUITER</p><h2>Loaded carry</h2></div></div>
+        <div id="carryLine" class="carry-line"></div>
+      </div>
       <details class="routine glass"><summary>Cool-down</summary><p>Breathing · L-sit · Bridge · Spinal twist</p></details>
       <button class="button primary complete-button" id="completeSession">Complete session</button>
     </section>
