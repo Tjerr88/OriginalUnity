@@ -10,3 +10,4 @@ Static GitHub Pages build. No build step is required.
 
 Unity can then be installed from the browser and works offline after the first visit.
 
+The Exercise Library is available under **Settings**. Library changes are applied to the active block and included in shared plans.

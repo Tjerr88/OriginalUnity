@@ -155,9 +155,22 @@
     <section id="settingsView" class="view app-view" hidden>
       <div class="page-head"><div><p class="eyebrow">SETTINGS</p><h1>Program</h1></div></div>
       <div class="glass settings-card">
+        <button class="settings-action" id="editLibrary"><span><b>Exercise Library</b><small>Customize mains and accessories</small></span><span>&rarr;</span></button>
         <button class="settings-action" id="editProgram"><span><b>Edit program</b><small>Return to setup</small></span><span>→</span></button>
         <button class="settings-action" id="sharePlanSettings"><span><b>Share Plan</b><small>Send this block</small></span><span>→</span></button>
         <button class="settings-action danger" id="resetProgram"><span><b>Reset program</b><small>Clear progress and return to setup</small></span><span>→</span></button>
+      </div>
+    </section>
+
+    <section id="libraryView" class="view app-view" hidden>
+      <div class="page-head library-head">
+        <div><p class="eyebrow">SETTINGS</p><h1>Exercise Library</h1></div>
+        <button class="button compact" id="closeLibrary">Done</button>
+      </div>
+      <form id="libraryForm" class="library-form"></form>
+      <div class="library-actions">
+        <button type="button" class="button secondary" id="restoreLibrary">Restore defaults</button>
+        <button type="button" class="button primary" id="saveLibrary">Save library</button>
       </div>
     </section>
   </main>

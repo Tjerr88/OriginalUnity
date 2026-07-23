@@ -1,13 +1,13 @@
 (() => {
   'use strict';
 
-  const VERSION = 1;
+  const VERSION = 2;
   const STORE = 'unity_pwa_state_v1';
   const TYPES = ['Deload', 'Maintenance', 'Development', 'Stress'];
   const TYPE_PCT = { Deload: .15, Maintenance: .22, Development: .28, Stress: .35 };
   const SPLITS = { Deload: [.15, .35, .5], Maintenance: [.15, .22, .28, .35], Development: [.15, .22, .28, .35], Stress: [.1, .15, .2, .25, .3] };
   const PATTERNS = ['Push', 'Pull', 'Squat', 'Lunge', 'Hinge', 'Rotation', 'Anti-Rotation', 'Loaded Carry'];
-  const LIBRARY = {
+  const DEFAULT_LIBRARY = {
     Push: { main: 'Military Press', acc: ['Double Push Press', 'Half-Kneeling Press', 'Double Bridge Floor Press'] },
     Pull: { main: 'Double Clean', acc: ['Pull-up / Chin-up', 'Wide Row', 'Small Row'] },
     Squat: { main: 'Double Front Squat', acc: ['Box Pistol', 'Step-up', 'Goblet Squat'] },
@@ -19,10 +19,18 @@
   };
   const BALLISTIC = /swing|snatch|double clean|push press/i;
   const UNILATERAL = /one-arm|single-leg|split|pistol|step-up|lunge|windmill|bent press|half-kneeling|renegade|pull-up|chin-up|military press|push press|snatch|turkish get up/i;
+  function makeDefaultLibrary() {
+    return Object.fromEntries(PATTERNS.map(pattern => {
+      const source = DEFAULT_LIBRARY[pattern];
+      const names = [source.main, ...source.acc];
+      return [pattern, { items: names.map(name => ({ name, ballistic: BALLISTIC.test(name), unilateral: UNILATERAL.test(name) })) }];
+    }));
+  }
   const DEFAULTS = {
     baseKB: 20, volume: 180, autoProgression: true, bias: true, weekMode: 'balanced',
     strengthFocus: '', strengthReps: 180, barbellMode: false,
-    barbell: { Push: 'Barbell Bench Press', Pull: 'Barbell Row', Squat: 'Back Squat', Hinge: 'Deadlift' }
+    barbell: { Push: 'Barbell Bench Press', Pull: 'Barbell Row', Squat: 'Back Squat', Hinge: 'Deadlift' },
+    library: makeDefaultLibrary()
   };
   const TESTS = [
     { id: 'swing', name: 'One-arm Swing', target: '10 / side', sides: true, min: 10 },
@@ -38,8 +46,9 @@
   const $$ = (s, root = document) => [...root.querySelectorAll(s)];
   const clone = value => JSON.parse(JSON.stringify(value));
   const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const defaultState = () => ({ version: VERSION, mode: 'setup', settings: clone(DEFAULTS), seed: null, plan: null, cursor: 0, completed: {}, counters: {}, cycle: 1, tests: [] });
+  const defaultState = () => ({ version: VERSION, mode: 'setup', settings: clone(DEFAULTS), planSettings: null, seed: null, plan: null, cursor: 0, completed: {}, counters: {}, cycle: 1, tests: [] });
   let state = loadState();
+  let setupLibrary = mergeLibrary(state.settings.library);
   let setupStep = 0;
   let importedSeed = null;
   let editing = false;
@@ -51,13 +60,41 @@
   function loadState() {
     try {
       const value = JSON.parse(localStorage.getItem(STORE));
-      if (!value || value.version !== VERSION) return defaultState();
+      if (!value || ![1, VERSION].includes(value.version)) return defaultState();
+      value.version = VERSION;
       value.settings = mergeSettings(value.settings);
+      if (value.plan && !value.planSettings) value.planSettings = clone(value.settings);
       return value;
     } catch (_) { return defaultState(); }
   }
   function mergeSettings(value = {}) {
-    return { ...clone(DEFAULTS), ...value, barbell: { ...DEFAULTS.barbell, ...(value.barbell || {}) } };
+    return { ...clone(DEFAULTS), ...value, barbell: { ...DEFAULTS.barbell, ...(value.barbell || {}) }, library: mergeLibrary(value.library) };
+  }
+  function mergeLibrary(value = {}) {
+    const defaults = makeDefaultLibrary();
+    return Object.fromEntries(PATTERNS.map(pattern => {
+      const source = value[pattern] && Array.isArray(value[pattern].items) ? value[pattern].items : [];
+      const items = defaults[pattern].items.map((fallback, index) => {
+        const current = source[index] || {};
+        const name = String(current.name || fallback.name).trim() || fallback.name;
+        return {
+          name,
+          ballistic: typeof current.ballistic === 'boolean' ? current.ballistic : BALLISTIC.test(name),
+          unilateral: typeof current.unilateral === 'boolean' ? current.unilateral : UNILATERAL.test(name)
+        };
+      });
+      return [pattern, { items }];
+    }));
+  }
+  function patternLibrary(settings, pattern) {
+    return mergeLibrary(settings.library)[pattern].items;
+  }
+  function exerciseTraits(settings, name) {
+    for (const pattern of PATTERNS) {
+      const found = patternLibrary(settings, pattern).find(item => item.name === name);
+      if (found) return found;
+    }
+    return { ballistic: BALLISTIC.test(name), unilateral: UNILATERAL.test(name) };
   }
   function save() { localStorage.setItem(STORE, JSON.stringify(state)); }
   function randomSeed() {
@@ -139,17 +176,18 @@
     return best.days;
   }
 
-  function displayReps(name, count) {
-    const shown = BALLISTIC.test(name) ? count * 2 : count;
-    return UNILATERAL.test(name) ? `${shown} + ${shown}` : String(shown);
+  function displayReps(name, count, settings) {
+    const traits = exerciseTraits(settings, name);
+    const shown = traits.ballistic ? count * 2 : count;
+    return traits.unilateral ? `${shown} + ${shown}` : String(shown);
   }
   function entryExercises(entry, settings, rc, rng, idBase) {
+    const configured = patternLibrary(settings, entry.pattern);
     if (entry.pattern === 'Loaded Carry') {
-      const choices = [LIBRARY[entry.pattern].main, ...LIBRARY[entry.pattern].acc];
+      const choices = configured.map(item => item.name);
       return [{ id: `${idBase}-carry`, name: choices[Math.floor(rng() * choices.length)], detail: `${Math.max(30, entry.volume * 5)} sec`, rounds: 1, intensity: entry.intensity, weight: entry.intensity === 'Heavy' ? settings.baseKB + 4 : entry.intensity === 'Light' ? Math.max(4, settings.baseKB - 4) : settings.baseKB, carry: true }];
     }
-    const lib = LIBRARY[entry.pattern];
-    let main = lib.main;
+    let main = configured[0].name;
     const isBarbell = settings.barbellMode && entry.intensity === 'Heavy' && settings.barbell[entry.pattern];
     if (isBarbell) main = settings.barbell[entry.pattern];
     const standard = Math.min(entry.volume, rc.cap * rc.rounds);
@@ -162,16 +200,16 @@
     }
     const weight = isBarbell ? 'Barbell' : entry.intensity === 'Heavy' ? settings.baseKB + 4 : entry.intensity === 'Light' ? Math.max(4, settings.baseKB - 4) : settings.baseKB;
     const exercises = [];
-    if (assigned > 0) exercises.push({ id: `${idBase}-m`, name: main, detail: `${displayReps(main, Math.max(1, Math.floor(assigned / rc.rounds)))} reps`, rounds: rc.rounds, intensity: entry.intensity, weight });
+    if (assigned > 0) exercises.push({ id: `${idBase}-m`, name: main, detail: `${displayReps(main, Math.max(1, Math.floor(assigned / rc.rounds)), settings)} reps`, rounds: rc.rounds, intensity: entry.intensity, weight });
     let remaining = entry.volume - assigned;
-    const accessories = shuffle(lib.acc, rng);
+    const accessories = shuffle(configured.slice(1).map(item => item.name), rng);
     let index = 0;
     while (remaining >= rc.rounds && index < accessories.length) {
       const name = accessories[index++];
       const amount = Math.min(remaining, rc.cap * rc.rounds);
       const perRound = Math.max(1, Math.floor(amount / rc.rounds));
       const used = perRound * rc.rounds;
-      exercises.push({ id: `${idBase}-a${index}`, name, detail: `${displayReps(name, perRound)} reps`, rounds: rc.rounds, intensity: 'Base', weight: settings.baseKB });
+      exercises.push({ id: `${idBase}-a${index}`, name, detail: `${displayReps(name, perRound, settings)} reps`, rounds: rc.rounds, intensity: 'Base', weight: settings.baseKB });
       remaining -= used;
     }
     return exercises;
@@ -202,7 +240,7 @@
       const candidates = shuffle([0, 1, 2, 3, 4], rng).slice(0, 3);
       volumes.forEach((volume, i) => {
         const target = days[week * 5 + candidates[i]];
-        const name = LIBRARY[settings.strengthFocus].main;
+        const name = patternLibrary(settings, settings.strengthFocus)[0].name;
         target.exercises.unshift({ id: `focus-w${week}-${i}`, name, detail: `${volume} total reps`, rounds: 1, intensity: 'Focus', weight: settings.baseKB, focus: true });
       });
     }
@@ -219,10 +257,12 @@
       strengthFocus: $('#strengthFocus').value,
       strengthReps: +$('#strengthReps').value,
       barbellMode: $('#barbellMode').checked,
-      barbell: { Push: $('#barbellPush').value.trim(), Pull: $('#barbellPull').value.trim(), Squat: $('#barbellSquat').value.trim(), Hinge: $('#barbellHinge').value.trim() }
+      barbell: { Push: $('#barbellPush').value.trim(), Pull: $('#barbellPull').value.trim(), Squat: $('#barbellSquat').value.trim(), Hinge: $('#barbellHinge').value.trim() },
+      library: setupLibrary
     });
   }
   function fillSettings(settings) {
+    setupLibrary = mergeLibrary(settings.library);
     $('#baseKB').value = settings.baseKB;
     $(`input[name="volume"][value="${settings.volume}"]`)?.click();
     $('#autoProgression').checked = settings.autoProgression;
@@ -262,6 +302,7 @@
     if (!settings.baseKB || settings.baseKB < 4) return toast('Enter a valid bell weight');
     if (editing && state.plan && !confirm('Create a new block and replace the current sessions?')) return;
     state.settings = settings;
+    state.planSettings = clone(settings);
     state.seed = importedSeed || randomSeed();
     state.plan = generatePlan(settings, state.seed);
     state.cursor = 0;
@@ -277,13 +318,15 @@
   function showView(name) {
     const setup = name === 'setup';
     const skill = name === 'skill';
+    const library = name === 'library';
     $$('.view').forEach(view => view.hidden = view.id !== `${name}View`);
     $('#topbar').hidden = setup;
-    $('#bottomNav').hidden = setup || skill;
+    $('#bottomNav').hidden = setup || skill || library;
     $$('#bottomNav button').forEach(button => button.classList.toggle('active', button.dataset.view === name));
     if (name === 'train') renderTrain();
     if (name === 'skill') renderSkill();
     if (name === 'progress') renderProgress();
+    if (name === 'library') renderLibrary();
     $('#cycleChip').textContent = `CYCLE ${state.cycle}`;
     scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -453,12 +496,63 @@
     if (state.settings.autoProgression) {
       state.seed = randomSeed();
       state.plan = generatePlan(state.settings, state.seed);
+      state.planSettings = clone(state.settings);
       state.cursor = 0; state.completed = {}; state.counters = {}; state.mode = 'active';
       save(); showView('train');
     } else {
       state.mode = 'setup'; state.plan = null; state.completed = {}; state.counters = {};
       save(); setupStep = 4; renderSetupStep(); showView('setup');
     }
+  }
+
+  function renderLibrary() {
+    const library = mergeLibrary(state.settings.library);
+    const labels = ['Main', 'Accessory 1', 'Accessory 2', 'Accessory 3'];
+    $('#libraryForm').innerHTML = PATTERNS.map((pattern, patternIndex) => {
+      const rows = library[pattern].items.map((item, index) => `
+        <div class="library-row" data-index="${index}">
+          <label class="library-name"><span>${labels[index]}</span><input type="text" value="${esc(item.name)}" required></label>
+          <div class="trait-options">
+            <label><input type="checkbox" data-trait="ballistic" ${item.ballistic ? 'checked' : ''}><span>Ballistic</span></label>
+            <label><input type="checkbox" data-trait="unilateral" ${item.unilateral ? 'checked' : ''}><span>Unilateral</span></label>
+          </div>
+        </div>`).join('');
+      return `<details class="library-pattern glass" data-pattern="${esc(pattern)}" ${patternIndex === 0 ? 'open' : ''}><summary><b>${esc(pattern)}</b><span>${esc(library[pattern].items[0].name)}</span></summary><div class="library-panel">${rows}</div></details>`;
+    }).join('');
+  }
+  function readLibraryForm() {
+    const result = {};
+    for (const card of $$('.library-pattern')) {
+      const items = $$('.library-row', card).map(row => ({
+        name: $('input[type="text"]', row).value.trim(),
+        ballistic: $('[data-trait="ballistic"]', row).checked,
+        unilateral: $('[data-trait="unilateral"]', row).checked
+      }));
+      if (items.some(item => !item.name)) return null;
+      result[card.dataset.pattern] = { items };
+    }
+    return mergeLibrary(result);
+  }
+  function saveLibrary() {
+    const library = readLibraryForm();
+    if (!library) return toast('Every exercise needs a name');
+    state.settings.library = library;
+    setupLibrary = library;
+    if (state.plan && state.mode === 'active') {
+      state.plan = generatePlan(state.settings, state.seed);
+      state.planSettings = clone(state.settings);
+    }
+    save();
+    toast(state.plan && state.mode === 'active' ? 'Applied to the active block' : 'Exercise library saved');
+    showView('settings');
+  }
+  function restoreLibrary() {
+    if (!confirm('Restore every exercise to the Unity defaults?')) return;
+    state.settings.library = makeDefaultLibrary();
+    setupLibrary = state.settings.library;
+    save();
+    renderLibrary();
+    toast('Defaults restored');
   }
 
   function renderProgress() {
@@ -480,7 +574,7 @@
   }
   async function sharePlan() {
     if (!state.plan) return;
-    const code = encodePlan({ v: VERSION, seed: state.seed, settings: state.settings });
+    const code = encodePlan({ v: VERSION, seed: state.seed, settings: state.planSettings || state.settings });
     const url = `${location.origin}${location.pathname}?plan=${code}`;
     try {
       if (navigator.share) await navigator.share({ title: 'Unity Plan', text: 'Train this Unity block with me.', url });
@@ -508,6 +602,7 @@
     state = defaultState();
     state.settings = settings;
     localStorage.removeItem(STORE);
+    save();
     fillSettings(settings);
     setupStep = 0; editing = false; renderSetupStep(); showView('setup');
   }
@@ -529,6 +624,10 @@
     $$('#bottomNav button,[data-view]').forEach(button => button.addEventListener('click', () => { const target = button.dataset.view; if (target) showView(target); }));
     $('#sharePlan').addEventListener('click', sharePlan);
     $('#sharePlanSettings').addEventListener('click', sharePlan);
+    $('#editLibrary').addEventListener('click', () => showView('library'));
+    $('#closeLibrary').addEventListener('click', () => showView('settings'));
+    $('#saveLibrary').addEventListener('click', saveLibrary);
+    $('#restoreLibrary').addEventListener('click', restoreLibrary);
     $('#editProgram').addEventListener('click', () => { editing = true; fillSettings(state.settings); setupStep = 0; renderSetupStep(); showView('setup'); });
     $('#resetProgram').addEventListener('click', resetProgram);
     $('#importAnother').addEventListener('click', () => { importedSeed = null; $('#importAnother').hidden = true; fillSettings(DEFAULTS); setupStep = 0; renderSetupStep(); });
